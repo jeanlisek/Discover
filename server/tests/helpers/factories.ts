@@ -7,6 +7,7 @@
 import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import { encryptMfaSecret } from '../../src/services/mfaCrypto';
+import { encrypt_api_key } from '../../src/services/apiKeyCrypto';
 
 let _userSeq = 0;
 let _tripSeq = 0;
@@ -505,4 +506,76 @@ export function disableNotificationPref(
   db.prepare(
     'INSERT OR REPLACE INTO notification_channel_preferences (user_id, event_type, channel, enabled) VALUES (?, ?, ?, 0)'
   ).run(userId, eventType, channel);
+}
+
+// ---------------------------------------------------------------------------
+// Photo integration helpers
+// ---------------------------------------------------------------------------
+
+export interface TestTripPhoto {
+  id: number;
+  trip_id: number;
+  user_id: number;
+  asset_id: string;
+  provider: string;
+  shared: number;
+  album_link_id: number | null;
+}
+
+export function addTripPhoto(
+  db: Database.Database,
+  tripId: number,
+  userId: number,
+  assetId: string,
+  provider: string,
+  opts: { shared?: boolean; albumLinkId?: number } = {}
+): TestTripPhoto {
+  const result = db.prepare(
+    'INSERT OR IGNORE INTO trip_photos (trip_id, user_id, asset_id, provider, shared, album_link_id) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(tripId, userId, assetId, provider, opts.shared ? 1 : 0, opts.albumLinkId ?? null);
+  return db.prepare('SELECT * FROM trip_photos WHERE id = ?').get(result.lastInsertRowid) as TestTripPhoto;
+}
+
+export interface TestAlbumLink {
+  id: number;
+  trip_id: number;
+  user_id: number;
+  provider: string;
+  album_id: string;
+  album_name: string;
+}
+
+export function addAlbumLink(
+  db: Database.Database,
+  tripId: number,
+  userId: number,
+  provider: string,
+  albumId: string,
+  albumName = 'Test Album'
+): TestAlbumLink {
+  const result = db.prepare(
+    'INSERT INTO trip_album_links (trip_id, user_id, provider, album_id, album_name) VALUES (?, ?, ?, ?, ?)'
+  ).run(tripId, userId, provider, albumId, albumName);
+  return db.prepare('SELECT * FROM trip_album_links WHERE id = ?').get(result.lastInsertRowid) as TestAlbumLink;
+}
+
+export function setImmichCredentials(
+  db: Database.Database,
+  userId: number,
+  url: string,
+  apiKey: string
+): void {
+  db.prepare('UPDATE users SET immich_url = ?, immich_api_key = ? WHERE id = ?')
+    .run(url, encrypt_api_key(apiKey), userId);
+}
+
+export function setSynologyCredentials(
+  db: Database.Database,
+  userId: number,
+  url: string,
+  username: string,
+  password: string
+): void {
+  db.prepare('UPDATE users SET synology_url = ?, synology_username = ?, synology_password = ? WHERE id = ?')
+    .run(url, username, encrypt_api_key(password), userId);
 }

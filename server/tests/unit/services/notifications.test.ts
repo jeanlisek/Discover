@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, afterAll, beforeEach } from 'vitest';
 
 vi.mock('../../../src/db/database', () => ({
   db: { prepare: () => ({ get: vi.fn(() => undefined), all: vi.fn(() => []) }) },
@@ -16,12 +16,12 @@ vi.mock('../../../src/services/auditLog', () => ({
   getClientIp: vi.fn(),
 }));
 vi.mock('nodemailer', () => ({ default: { createTransport: vi.fn(() => ({ sendMail: vi.fn() })) } }));
-vi.mock('node-fetch', () => ({ default: vi.fn() }));
+vi.stubGlobal('fetch', vi.fn());
 
 // ssrfGuard is mocked per-test in the SSRF describe block; default passes all
 vi.mock('../../../src/utils/ssrfGuard', () => ({
   checkSsrf: vi.fn(async () => ({ allowed: true, isPrivate: false, resolvedIp: '1.2.3.4' })),
-  createPinnedAgent: vi.fn(() => ({})),
+  createPinnedDispatcher: vi.fn(() => ({})),
 }));
 
 import { getEventText, buildEmailHtml, buildWebhookBody, sendWebhook } from '../../../src/services/notifications';
@@ -253,7 +253,7 @@ describe('sendWebhook SSRF protection (SEC-017)', () => {
   });
 
   it('allows a public URL and calls fetch', async () => {
-    const mockFetch = (await import('node-fetch')).default as unknown as ReturnType<typeof vi.fn>;
+    const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
     mockFetch.mockResolvedValueOnce({ ok: true, text: async () => '' } as never);
     vi.mocked(checkSsrf).mockResolvedValueOnce({ allowed: true, isPrivate: false, resolvedIp: '1.2.3.4' });
 
@@ -306,7 +306,7 @@ describe('sendWebhook SSRF protection (SEC-017)', () => {
   });
 
   it('does not call fetch when SSRF check blocks the URL', async () => {
-    const mockFetch = (await import('node-fetch')).default as unknown as ReturnType<typeof vi.fn>;
+    const mockFetch = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
     mockFetch.mockClear();
     vi.mocked(checkSsrf).mockResolvedValueOnce({
       allowed: false, isPrivate: true, resolvedIp: '127.0.0.1',
@@ -317,3 +317,5 @@ describe('sendWebhook SSRF protection (SEC-017)', () => {
     expect(mockFetch).not.toHaveBeenCalled();
   });
 });
+
+afterAll(() => vi.unstubAllGlobals());

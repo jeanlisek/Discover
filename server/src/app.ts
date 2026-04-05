@@ -35,7 +35,6 @@ import oidcRoutes from './routes/oidc';
 import vacayRoutes from './routes/vacay';
 import atlasRoutes from './routes/atlas';
 import memoriesRoutes from './routes/memories/unified';
-import immichRoutes from './routes/immich';
 import notificationRoutes from './routes/notifications';
 import shareRoutes from './routes/share';
 import { mcpHandler } from './mcp';
@@ -258,8 +257,6 @@ export function createApp(): express.Application {
   app.use('/api/addons/vacay', vacayRoutes);
   app.use('/api/addons/atlas', atlasRoutes);
   app.use('/api/integrations/memories', memoriesRoutes);
-  //old routes for immich integration (will be removed eventually)
-  app.use('/api/integrations/immich', immichRoutes);
   app.use('/api/maps', mapsRoutes);
   app.use('/api/weather', weatherRoutes);
   app.use('/api/settings', settingsRoutes);

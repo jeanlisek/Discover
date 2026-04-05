@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { db } from '../db/database';
 import { Trip, Place } from '../types';
 

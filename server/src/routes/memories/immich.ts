@@ -1,9 +1,8 @@
-import express, { Request, Response, NextFunction } from 'express';
-import { db, canAccessTrip } from '../../db/database';
+import express, { Request, Response } from 'express';
+import { canAccessTrip } from '../../db/database';
 import { authenticate } from '../../middleware/auth';
 import { broadcast } from '../../websocket';
 import { AuthRequest } from '../../types';
-import { consumeEphemeralToken } from '../../services/ephemeralTokens';
 import { getClientIp } from '../../services/auditLog';
 import {
   getConnectionSettings,
@@ -12,29 +11,15 @@ import {
   getConnectionStatus,
   browseTimeline,
   searchPhotos,
-  proxyThumbnail,
-  proxyOriginal,
+  streamImmichAsset,
   listAlbums,
   syncAlbumAssets,
   getAssetInfo,
+  isValidAssetId,
 } from '../../services/memories/immichService';
 import { canAccessUserPhoto } from '../../services/memories/helpersService';
 
 const router = express.Router();
-
-// ── Dual auth middleware (JWT or ephemeral token for <img> src) ─────────────
-function authFromQuery(req: Request, res: Response, next: NextFunction) {
-  const queryToken = req.query.token as string | undefined;
-  if (queryToken) {
-    const userId = consumeEphemeralToken(queryToken, 'immich');
-    if (!userId) return res.status(401).send('Invalid or expired token');
-    const user = db.prepare('SELECT id, username, email, role, mfa_enabled FROM users WHERE id = ?').get(userId) as any;
-    if (!user) return res.status(401).send('User not found');
-    (req as AuthRequest).user = user;
-    return next();
-  }
-  return (authenticate as any)(req, res, next);
-}
 
 // ── Immich Connection Settings ─────────────────────────────────────────────
 
@@ -86,6 +71,7 @@ router.get('/assets/:tripId/:assetId/:ownerId/info', authenticate, async (req: R
   const authReq = req as AuthRequest;
   const { tripId, assetId, ownerId } = req.params;
 
+  if (!isValidAssetId(assetId)) return res.status(400).json({ error: 'Invalid asset ID' });
   if (!canAccessUserPhoto(authReq.user.id, Number(ownerId), tripId, assetId, 'immich')) {
     return res.status(403).json({ error: 'Forbidden' });
   }
@@ -96,32 +82,26 @@ router.get('/assets/:tripId/:assetId/:ownerId/info', authenticate, async (req: R
 
 // ── Proxy Immich Assets ────────────────────────────────────────────────────
 
-router.get('/assets/:tripId/:assetId/:ownerId/thumbnail', authFromQuery, async (req: Request, res: Response) => {
+router.get('/assets/:tripId/:assetId/:ownerId/thumbnail', authenticate, async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
   const { tripId, assetId, ownerId } = req.params;
 
+  if (!isValidAssetId(assetId)) return res.status(400).json({ error: 'Invalid asset ID' });
   if (!canAccessUserPhoto(authReq.user.id, Number(ownerId), tripId, assetId, 'immich')) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const result = await proxyThumbnail(authReq.user.id, assetId, Number(ownerId));
-  if (result.error) return res.status(result.status!).send(result.error);
-  res.set('Content-Type', result.contentType!);
-  res.set('Cache-Control', 'public, max-age=86400');
-  res.send(result.buffer);
+  await streamImmichAsset(res, authReq.user.id, assetId, 'thumbnail', Number(ownerId));
 });
 
-router.get('/assets/:tripId/:assetId/:ownerId/original', authFromQuery, async (req: Request, res: Response) => {
+router.get('/assets/:tripId/:assetId/:ownerId/original', authenticate, async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
   const { tripId, assetId, ownerId } = req.params;
 
+  if (!isValidAssetId(assetId)) return res.status(400).json({ error: 'Invalid asset ID' });
   if (!canAccessUserPhoto(authReq.user.id, Number(ownerId), tripId, assetId, 'immich')) {
     return res.status(403).json({ error: 'Forbidden' });
   }
-  const result = await proxyOriginal(authReq.user.id, assetId, Number(ownerId));
-  if (result.error) return res.status(result.status!).send(result.error);
-  res.set('Content-Type', result.contentType!);
-  res.set('Cache-Control', 'public, max-age=86400');
-  res.send(result.buffer);
+  await streamImmichAsset(res, authReq.user.id, assetId, 'original', Number(ownerId));
 });
 
 // ── Album Linking ──────────────────────────────────────────────────────────

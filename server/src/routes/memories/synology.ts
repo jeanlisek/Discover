@@ -113,7 +113,9 @@ router.get('/assets/:tripId/:photoId/:ownerId/info', authenticate, async (req: R
 router.get('/assets/:tripId/:photoId/:ownerId/:kind', authenticate, async (req: Request, res: Response) => {
     const authReq = req as AuthRequest;
     const { tripId, photoId, ownerId, kind } = req.params;
-    const { size = "sm" } = req.query;
+    const VALID_SIZES = ['sm', 'm', 'xl'] as const;
+    const rawSize = String(req.query.size ?? 'sm');
+    const size = VALID_SIZES.includes(rawSize as any) ? rawSize : 'sm';
 
     if (kind !== 'thumbnail' && kind !== 'original') {
         return handleServiceResult(res, fail('Invalid asset kind', 400));

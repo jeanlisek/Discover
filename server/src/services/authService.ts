@@ -3,7 +3,6 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
-import fetch from 'node-fetch';
 import { authenticator } from 'otplib';
 import QRCode from 'qrcode';
 import { randomBytes, createHash } from 'crypto';
@@ -983,7 +982,7 @@ export function createWsToken(userId: number): { error?: string; status?: number
 }
 
 export function createResourceToken(userId: number, purpose?: string): { error?: string; status?: number; token?: string } {
-  if (purpose !== 'download' && purpose !== 'immich' && purpose !== 'synologyphotos') {
+  if (purpose !== 'download') {
     return { error: 'Invalid purpose', status: 400 };
   }
   const token = createEphemeralToken(userId, purpose);

@@ -1,9 +1,8 @@
 import nodemailer from 'nodemailer';
-import fetch from 'node-fetch';
 import { db } from '../db/database';
 import { decrypt_api_key } from './apiKeyCrypto';
 import { logInfo, logDebug, logError } from './auditLog';
-import { checkSsrf, createPinnedAgent } from '../utils/ssrfGuard';
+import { checkSsrf, createPinnedDispatcher } from '../utils/ssrfGuard';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -351,14 +350,13 @@ export async function sendWebhook(url: string, payload: { event: string; title: 
   }
 
   try {
-    const agent = createPinnedAgent(ssrf.resolvedIp!, new URL(url).protocol);
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: buildWebhookBody(url, payload),
       signal: AbortSignal.timeout(10000),
-      agent,
-    });
+      dispatcher: createPinnedDispatcher(ssrf.resolvedIp!),
+    } as any);
 
     if (!res.ok) {
       const errBody = await res.text().catch(() => '');

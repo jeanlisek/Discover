@@ -1,8 +1,8 @@
-import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { Readable } from 'node:stream';
 import { Response } from 'express';
 import { canAccessTrip, db } from "../../db/database";
-import { checkSsrf } from '../../utils/ssrfGuard';
+import { safeFetch, SsrfBlockedError } from '../../utils/ssrfGuard';
 
 // helpers for handling return types
 
@@ -162,33 +162,27 @@ export function updateSyncTimeForAlbumLink(linkId: string): void {
     db.prepare('UPDATE trip_album_links SET last_synced_at = CURRENT_TIMESTAMP WHERE id = ?').run(linkId);
 }
 
-export async function pipeAsset(url: string, response: Response): Promise<void> {
-    try{
+export async function pipeAsset(url: string, response: Response, headers?: Record<string, string>, signal?: AbortSignal): Promise<void> {
+    try {
+        const resp = await safeFetch(url, { headers, signal: signal as any });
 
-        const SsrfResult = await checkSsrf(url);
-        if (!SsrfResult.allowed) {
-            response.status(400).json({ error: SsrfResult.error });
-            response.end();
-            return;
-        }
-        const resp = await fetch(url);
-    
         response.status(resp.status);
         if (resp.headers.get('content-type')) response.set('Content-Type', resp.headers.get('content-type') as string);
         if (resp.headers.get('cache-control')) response.set('Cache-Control', resp.headers.get('cache-control') as string);
         if (resp.headers.get('content-length')) response.set('Content-Length', resp.headers.get('content-length') as string);
         if (resp.headers.get('content-disposition')) response.set('Content-Disposition', resp.headers.get('content-disposition') as string);
-    
+
         if (!resp.body) {
             response.end();
+        } else {
+            await pipeline(Readable.fromWeb(resp.body as any), response);
         }
-        else {
-            pipeline(Readable.fromWeb(resp.body), response);
+    } catch (error) {
+        if (response.headersSent) return;
+        if (error instanceof SsrfBlockedError) {
+            response.status(400).json({ error: error.message });
+        } else {
+            response.status(500).json({ error: 'Failed to fetch asset' });
         }
     }
-    catch (error) {
-        response.status(500).json({ error: 'Failed to fetch asset' });
-        response.end();
-    }
-
 }

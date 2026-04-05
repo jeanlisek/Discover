@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { db } from '../db/database';
 import { decrypt_api_key } from './apiKeyCrypto';
 import { checkSsrf } from '../utils/ssrfGuard';

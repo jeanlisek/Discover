@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import { XMLParser } from 'fast-xml-parser';
 import { db, getPlaceWithTags } from '../db/database';
 import { loadTagsByPlaceIds } from './queryHelpers';

@@ -2,7 +2,7 @@
 import { Response } from 'express';
 import { db } from '../../db/database';
 import { decrypt_api_key, encrypt_api_key, maybe_encrypt_api_key } from '../apiKeyCrypto';
-import { checkSsrf } from '../../utils/ssrfGuard';
+import { safeFetch, SsrfBlockedError, checkSsrf } from '../../utils/ssrfGuard';
 import { addTripPhotos } from './unifiedService';
 import {
     getAlbumIdFromLink,
@@ -84,9 +84,6 @@ interface SynologyPhotoItem {
 
 function _readSynologyUser(userId: number, columns: string[]): ServiceResult<SynologyUserRecord> {
     try {
-
-        if (!columns) return null;
-
         const row = db.prepare(`SELECT synology_url, synology_username, synology_password, synology_sid FROM users WHERE id = ?`).get(userId) as SynologyUserRecord | undefined;
 
         if (!row) {
@@ -96,10 +93,6 @@ function _readSynologyUser(userId: number, columns: string[]): ServiceResult<Syn
         const filtered: SynologyUserRecord = {};
         for (const column of columns) {
             filtered[column] = row[column];
-        }
-
-        if (!filtered) {
-            return fail('Failed to read Synology user data', 500);
         }
 
         return success(filtered);
@@ -112,10 +105,12 @@ function _getSynologyCredentials(userId: number): ServiceResult<SynologyCredenti
     const user = _readSynologyUser(userId, ['synology_url', 'synology_username', 'synology_password']);
     if (!user.success) return user as ServiceResult<SynologyCredentials>;
     if (!user?.data.synology_url || !user.data.synology_username || !user.data.synology_password) return fail('Synology not configured', 400);
+    const password = decrypt_api_key(user.data.synology_password);
+    if (!password) return fail('Synology credentials corrupted', 500);
     return success({
         synology_url: user.data.synology_url,
         synology_username: user.data.synology_username,
-        synology_password: decrypt_api_key(user.data.synology_password) as string,
+        synology_password: password,
     });
 }
 
@@ -136,30 +131,26 @@ function _buildSynologyFormBody(params: ApiCallParams): URLSearchParams {
 
 async function _fetchSynologyJson<T>(url: string, body: URLSearchParams): Promise<ServiceResult<T>> {
     const endpoint = _buildSynologyEndpoint(url, `api=${body.get('api')}`);
-    const SsrfResult = await checkSsrf(endpoint);
-    if (!SsrfResult.allowed) {
-        return fail(SsrfResult.error, 400);
-    }
     try {
-        const resp = await fetch(endpoint, {
+        const resp = await safeFetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             },
             body,
-            signal: AbortSignal.timeout(30000),
+            signal: AbortSignal.timeout(30000) as any,
         });
         if (!resp.ok) {
             return fail('Synology API request failed with status ' + resp.status, resp.status);
         }
         const response = await resp.json() as SynologyApiResponse<T>;
         return response.success ? success(response.data) : fail('Synology failed with code ' + response.error.code, response.error.code);
-    }
-    catch {
+    } catch (error) {
+        if (error instanceof SsrfBlockedError) {
+            return fail(error.message, 400);
+        }
         return fail('Failed to connect to Synology API', 500);
     }
-
-
 }
 
 async function _loginToSynology(url: string, username: string, password: string): Promise<ServiceResult<string>> {
@@ -196,11 +187,12 @@ async function _requestSynologyApi<T>(userId: number, params: ApiCallParams): Pr
 
     const body = _buildSynologyFormBody({ ...params, _sid: session.data });
     const result = await _fetchSynologyJson<T>(creds.data.synology_url, body);
-    if ('error' in result && result.error.status === 119) {
+    // 106 = session timeout, 107 = duplicate login kicked us out, 119 = SID not found/invalid
+    if ('error' in result && [106, 107, 119].includes(result.error.status)) {
         _clearSynologySID(userId);
         const retrySession = await _getSynologySession(userId);
         if (!retrySession.success || !retrySession.data) {
-            return session as ServiceResult<T>;
+            return retrySession as ServiceResult<T>;
         }
         return _fetchSynologyJson<T>(creds.data.synology_url, _buildSynologyFormBody({ ...params, _sid: retrySession.data }));
     }
@@ -240,7 +232,10 @@ function _clearSynologySID(userId: number): void {
     db.prepare('UPDATE users SET synology_sid = NULL WHERE id = ?').run(userId);
 }
 
-function _splitPackedSynologyId(rawId: string): { id: string; cacheKey: string; assetId: string } {
+function _splitPackedSynologyId(rawId: string): { id: string; cacheKey: string; assetId: string } | null {
+    // cache_key format from Synology is "{unit_id}_{timestamp}", e.g. "40808_1633659236".
+    // The first segment must be a non-empty integer (the unit ID used for API calls).
+    if (!/^\d+_.+$/.test(rawId)) return null;
     const id = rawId.split('_')[0];
     return { id, cacheKey: rawId, assetId: rawId };
 }
@@ -249,7 +244,9 @@ async function _getSynologySession(userId: number): Promise<ServiceResult<string
     const cachedSid = _readSynologyUser(userId, ['synology_sid']);
     if (cachedSid.success && cachedSid.data?.synology_sid) {
         const decryptedSid = decrypt_api_key(cachedSid.data.synology_sid);
-        return success(decryptedSid);
+        if (decryptedSid) return success(decryptedSid);
+        // Decryption failed (e.g. key rotation) — clear the stale SID and re-login
+        _clearSynologySID(userId);
     }
 
     const creds = _getSynologyCredentials(userId);
@@ -416,22 +413,24 @@ export async function searchSynologyPhotos(userId: number, from?: string, to?: s
         }
     }
 
-    const result = await _requestSynologyApi<{ list: SynologyPhotoItem[]; total: number }>(userId, params);
-    if (!result.success) return result as ServiceResult<{ assets: AssetInfo[]; total: number; hasMore: boolean }>;
+    // SYNO.Foto.Search.Search list_item does not return a total count — only data.list.
+    // hasMore is inferred: if we got a full page, there may be more.
+    const result = await _requestSynologyApi<{ list: SynologyPhotoItem[] }>(userId, params);
+    if (!result.success) return result as ServiceResult<AssetsList>;
 
     const allItems = result.data.list || [];
-    const total = allItems.length;
     const assets = allItems.map(item => _normalizeSynologyPhotoInfo(item));
 
     return success({
         assets,
-        total,
-        hasMore: total === limit,
+        total: allItems.length,
+        hasMore: allItems.length === limit,
     });
 }
 
 export async function getSynologyAssetInfo(userId: number, photoId: string, targetUserId?: number): Promise<ServiceResult<AssetInfo>> {
     const parsedId = _splitPackedSynologyId(photoId);
+    if (!parsedId) return fail('Invalid photo ID format', 400);
     const result = await _requestSynologyApi<{ list: SynologyPhotoItem[] }>(targetUserId, {
         api: 'SYNO.Foto.Browse.Item',
         method: 'get',
@@ -459,6 +458,10 @@ export async function streamSynologyAsset(
     size?: string,
 ): Promise<void> {
     const parsedId = _splitPackedSynologyId(photoId);
+    if (!parsedId) {
+        handleServiceResult(response, fail('Invalid photo ID format', 400));
+        return;
+    }
 
     const synology_credentials = _getSynologyCredentials(targetUserId);
     if (!synology_credentials.success) {
