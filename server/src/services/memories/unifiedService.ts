@@ -293,6 +293,9 @@ async function _notifySharedTripPhotos(
     const actorRow = db.prepare('SELECT username FROM users WHERE id = ?').get(actorUserId) as { username: string | null };
 
     const tripInfo = db.prepare('SELECT title FROM trips WHERE id = ?').get(tripId) as { title: string } | undefined;
+
+    
+    //send({ event: 'photos_shared', actorId: authReq.user.id, scope: 'trip', targetId: Number(tripId), params: { trip: tripInfo?.title || 'Untitled', actor: authReq.user.email, count: String(added), tripId: String(tripId) } }).catch(() => {});
     await notifyTripMembers(Number(tripId), actorUserId, 'photos_shared', {
       trip: tripInfo?.title || 'Untitled',
       actor: actorRow?.username || 'Unknown',
