@@ -17,7 +17,7 @@ function ProviderImg({ baseUrl, provider, style, loading }: { baseUrl: string; p
   const [src, setSrc] = useState('')
   useEffect(() => {
     let revoke = ''
-    fetchImageAsBlob(baseUrl).then(blobUrl => {
+    fetchImageAsBlob('/api' + baseUrl).then(blobUrl => {
       revoke = blobUrl
       setSrc(blobUrl)
     })
