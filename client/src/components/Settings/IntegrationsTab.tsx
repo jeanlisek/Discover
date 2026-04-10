@@ -552,7 +552,7 @@ export default function IntegrationsTab(): React.ReactElement {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-1">
                     <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('settings.oauth.modal.scopes')}</label>
                     <button type="button"
                       onClick={() => {
@@ -567,6 +567,7 @@ export default function IntegrationsTab(): React.ReactElement {
                         : t('settings.oauth.modal.selectAll')}
                     </button>
                   </div>
+                  <p className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>{t('settings.oauth.modal.scopesHint')}</p>
                   <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
                     {Object.entries(scopesByGroup).map(([group, groupScopes]) => {
                       const groupScopeKeys = groupScopes.map(s => s.scope)
@@ -625,7 +626,7 @@ export default function IntegrationsTab(): React.ReactElement {
                     {t('common.cancel')}
                   </button>
                   <button onClick={handleCreateOAuthClient}
-                    disabled={!oauthNewName.trim() || !oauthNewUris.trim() || oauthNewScopes.length === 0 || oauthCreating}
+                    disabled={!oauthNewName.trim() || !oauthNewUris.trim() || oauthCreating}
                     className="px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-50"
                     style={{ background: 'var(--accent-primary, #4f46e5)' }}>
                     {oauthCreating ? t('settings.oauth.modal.creating') : t('settings.oauth.modal.create')}

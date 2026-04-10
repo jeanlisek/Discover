@@ -24,9 +24,9 @@ import {
   TOOL_ANNOTATIONS_DELETE, TOOL_ANNOTATIONS_NON_IDEMPOTENT,
   demoDenied, noAccess, ok,
 } from './_shared';
-import { canReadTrips, canWrite, canDeleteTrips, canShareTrips } from '../scopes';
+import { canRead, canReadTrips, canWrite, canDeleteTrips, canShareTrips } from '../scopes';
 
-export function registerTripTools(server: McpServer, userId: number, scopes: string[] | null): void {
+export function registerTripTools(server: McpServer, userId: number, scopes: string[] | null, getDeprecationNotice: () => string | null = () => null): void {
   const R = canReadTrips(scopes);
   const W = canWrite(scopes, 'trips');
   const D = canDeleteTrips(scopes);
@@ -117,7 +117,9 @@ export function registerTripTools(server: McpServer, userId: number, scopes: str
     }
   );
 
-  if (R) server.registerTool(
+  // list_trips and get_trip_summary are always registered regardless of OAuth scopes —
+  // they are navigation tools that any MCP client needs to discover trip IDs.
+  server.registerTool(
     'list_trips',
     {
       description: 'List all trips the current user owns or is a member of. Use this for trip discovery before calling get_trip_summary.',
@@ -127,14 +129,17 @@ export function registerTripTools(server: McpServer, userId: number, scopes: str
       annotations: TOOL_ANNOTATIONS_READONLY,
     },
     async ({ include_archived }) => {
+      const notice = getDeprecationNotice();
       const trips = listTrips(userId, include_archived ? null : 0);
-      return ok({ trips });
+      const result = ok({ trips });
+      if (notice) return { content: [{ type: 'text' as const, text: notice }, ...result.content] };
+      return result;
     }
   );
 
   // --- TRIP SUMMARY ---
 
-  if (R) server.registerTool(
+  server.registerTool(
     'get_trip_summary',
     {
       description: 'Get a full denormalized summary of a trip in a single call: metadata, members, days with assignments and notes, accommodations, budget line items (when enabled), packing list (when enabled), reservations, collab notes and poll/message counts (when enabled), and to-do items (when enabled). Use this as a context loader before planning or modifying a trip.',
@@ -147,25 +152,37 @@ export function registerTripTools(server: McpServer, userId: number, scopes: str
       if (!canAccessTrip(tripId, userId)) return noAccess();
       const summary = getTripSummary(tripId);
       if (!summary) return noAccess();
+      // Addon availability gates
       const packingEnabled = isAddonEnabled(ADDON_IDS.PACKING);
-      const budgetEnabled = isAddonEnabled(ADDON_IDS.BUDGET);
-      const collabEnabled = isAddonEnabled(ADDON_IDS.COLLAB);
-      const todos = packingEnabled ? listTodoItems(tripId) : [];
+      const budgetEnabled  = isAddonEnabled(ADDON_IDS.BUDGET);
+      const collabEnabled  = isAddonEnabled(ADDON_IDS.COLLAB);
+      // Scope gates — sections not covered by the client's OAuth scopes are omitted.
+      // Core trip data (metadata, days, members, accommodations) is always included
+      // because this tool is always registered and needed for navigation.
+      const canReadBudget  = budgetEnabled  && canRead(scopes, 'budget');
+      const canReadPacking = packingEnabled && canRead(scopes, 'packing');
+      const canReadCollab  = collabEnabled  && canRead(scopes, 'collab');
+      const canReadRes     = canRead(scopes, 'reservations');
+      const todos = canReadPacking ? listTodoItems(tripId) : [];
       let pollCount = 0;
       let messageCount = 0;
-      if (collabEnabled) {
-        pollCount = listPolls(tripId).length;
+      if (canReadCollab) {
+        pollCount    = listPolls(tripId).length;
         messageCount = countMessages(tripId);
       }
-      return ok({
+      const notice = getDeprecationNotice();
+      const result = ok({
         ...summary,
-        packing: packingEnabled ? summary.packing : undefined,
-        budget: budgetEnabled ? summary.budget : undefined,
-        collab_notes: collabEnabled ? summary.collab_notes : [],
+        reservations:  canReadRes     ? summary.reservations  : undefined,
+        packing:       canReadPacking ? summary.packing        : undefined,
+        budget:        canReadBudget  ? summary.budget         : undefined,
+        collab_notes:  canReadCollab  ? summary.collab_notes   : undefined,
         todos,
         pollCount,
         messageCount,
       });
+      if (notice) return { content: [{ type: 'text' as const, text: notice }, ...result.content] };
+      return result;
     }
   );
 

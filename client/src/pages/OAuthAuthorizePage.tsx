@@ -215,31 +215,58 @@ export default function OAuthAuthorizePage(): React.ReactElement {
 
         {/* Right panel — scopes */}
         <div className="flex-1 px-6 py-8 overflow-y-auto max-h-[80vh] sm:max-h-[600px]">
-          <p className="text-xs font-medium uppercase tracking-wide mb-4" style={{ color: 'var(--text-tertiary)' }}>
-            Permissions requested
-          </p>
-          <div className="space-y-5">
-            {Object.entries(scopesByGroup).map(([group, groupScopes]) => (
-              <div key={group}>
-                <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>{group}</p>
-                <div className="space-y-1.5">
-                  {groupScopes.map(s => {
-                    const info = SCOPE_GROUPS[s]
-                    return (
-                      <div key={s} className="flex items-start gap-2.5 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
-                        <span className="mt-0.5 text-base leading-none flex-shrink-0">
-                          {s.endsWith(':delete') ? '🗑️' : s.endsWith(':write') ? '✏️' : '👁️'}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{info?.label || s}</p>
-                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{info?.description || ''}</p>
-                        </div>
+          <div className="space-y-6">
+            {Object.keys(scopesByGroup).length > 0 && (
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide mb-4" style={{ color: 'var(--text-tertiary)' }}>
+                  Permissions requested
+                </p>
+                <div className="space-y-5">
+                  {Object.entries(scopesByGroup).map(([group, groupScopes]) => (
+                    <div key={group}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>{group}</p>
+                      <div className="space-y-1.5">
+                        {groupScopes.map(s => {
+                          const info = SCOPE_GROUPS[s]
+                          return (
+                            <div key={s} className="flex items-start gap-2.5 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                              <span className="mt-0.5 text-base leading-none flex-shrink-0">
+                                {s.endsWith(':delete') ? '🗑️' : s.endsWith(':write') ? '✏️' : '👁️'}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{info?.label || s}</p>
+                                <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{info?.description || ''}</p>
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
-                    )
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Always-available tools — granted regardless of scopes */}
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide mb-3" style={{ color: 'var(--text-tertiary)' }}>
+                Always included
+              </p>
+              <div className="space-y-1.5">
+                {[
+                  { name: 'list_trips',       desc: 'List your trips so the AI can discover trip IDs' },
+                  { name: 'get_trip_summary', desc: 'Read a trip overview needed to use any other tool' },
+                ].map(({ name, desc }) => (
+                  <div key={name} className="flex items-start gap-2.5 px-3 py-2 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                    <span className="mt-0.5 text-base leading-none flex-shrink-0">👁️</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium font-mono" style={{ color: 'var(--text-primary)' }}>{name}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 

@@ -253,8 +253,18 @@ export async function mcpHandler(req: Request, res: Response): Promise<void> {
       instructions: BASE_MCP_INSTRUCTIONS + (isStaticToken ? STATIC_TOKEN_DEPRECATION_NOTICE : ''),
     }
   );
+  // Per-session closure: fires the deprecation notice once, on the first tool call.
+  // Tool results are the only mechanism Claude reliably surfaces to the user;
+  // the instructions field is only background context and won't trigger a proactive warning.
+  let _noticeEmitted = false;
+  const getDeprecationNotice = (): string | null => {
+    if (!isStaticToken || _noticeEmitted) return null;
+    _noticeEmitted = true;
+    return STATIC_TOKEN_DEPRECATION_NOTICE;
+  };
+
   registerResources(server, user.id, scopes);
-  registerTools(server, user.id, scopes, isStaticToken);
+  registerTools(server, user.id, scopes, isStaticToken, getDeprecationNotice);
 
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),

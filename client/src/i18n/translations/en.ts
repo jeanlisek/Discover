@@ -299,6 +299,7 @@ const en: Record<string, string | { name: string; category: string }[]> = {
   'settings.oauth.modal.redirectUrisPlaceholder': 'https://your-app.com/callback\nhttps://your-app.com/auth',
   'settings.oauth.modal.redirectUrisHint': 'One URI per line. HTTPS required (localhost exempt). Exact match enforced.',
   'settings.oauth.modal.scopes': 'Allowed Scopes',
+  'settings.oauth.modal.scopesHint': 'list_trips and get_trip_summary are always available — no scope required. They let the AI discover trip IDs needed to use any other tool.',
   'settings.oauth.modal.selectAll': 'Select all',
   'settings.oauth.modal.deselectAll': 'Deselect all',
   'settings.oauth.modal.creating': 'Registering…',
