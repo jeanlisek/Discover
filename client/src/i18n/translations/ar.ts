@@ -1462,7 +1462,7 @@ const ar: Record<string, string | { name: string; category: string }[]> = {
   'memories.disconnected': 'غير متصل',
   'memories.connectionSuccess': 'تم الاتصال بـ Immich',
   'memories.connectionError': 'تعذر الاتصال بـ Immich',
-  'memories.saved': 'تم حفظ إعدادات Immich',
+  'memories.saved': 'تم حفظ إعدادات {provider_name}',
   'memories.providerDisconnectedBanner': 'اتصالك بـ {provider_name} مفقود. أعد الاتصال في الإعدادات لعرض الصور.',
   'memories.saveError': 'تعذّر حفظ إعدادات {provider_name}',
   'memories.oldest': 'الأقدم أولاً',

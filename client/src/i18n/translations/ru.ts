@@ -1458,7 +1458,7 @@ const ru: Record<string, string> = {
   'memories.disconnected': 'Не подключено',
   'memories.connectionSuccess': 'Подключение к Immich установлено',
   'memories.connectionError': 'Не удалось подключиться к Immich',
-  'memories.saved': 'Настройки Immich сохранены',
+  'memories.saved': 'Настройки {provider_name} сохранены',
   'memories.providerDisconnectedBanner': 'Соединение с {provider_name} потеряно. Переподключитесь в Настройках для просмотра фотографий.',
   'memories.saveError': 'Не удалось сохранить настройки {provider_name}',
   'memories.oldest': 'Сначала старые',

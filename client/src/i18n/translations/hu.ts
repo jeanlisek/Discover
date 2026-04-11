@@ -1529,7 +1529,7 @@ const hu: Record<string, string | { name: string; category: string }[]> = {
   'memories.disconnected': 'Nincs csatlakoztatva',
   'memories.connectionSuccess': 'Csatlakozva az Immichhez',
   'memories.connectionError': 'Nem sikerült csatlakozni az Immichhez',
-  'memories.saved': 'Immich beállítások mentve',
+  'memories.saved': '{provider_name} beállítások mentve',
   'memories.providerDisconnectedBanner': 'A {provider_name} kapcsolat megszakadt. Csatlakozzon újra a Beállításokban a fényképek megtekintéséhez.',
   'memories.saveError': 'Nem sikerült menteni a(z) {provider_name} beállításait',
   'memories.addPhotos': 'Fotók hozzáadása',

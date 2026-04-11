@@ -1458,7 +1458,7 @@ const zh: Record<string, string> = {
   'memories.disconnected': '未连接',
   'memories.connectionSuccess': '已连接到 Immich',
   'memories.connectionError': '无法连接到 Immich',
-  'memories.saved': 'Immich 设置已保存',
+  'memories.saved': '{provider_name} 设置已保存',
   'memories.providerDisconnectedBanner': '您与 {provider_name} 的连接已断开。请在设置中重新连接以查看照片。',
   'memories.saveError': '无法保存 {provider_name} 设置',
   'memories.oldest': '最早优先',

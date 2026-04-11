@@ -1416,7 +1416,7 @@ const pl: Record<string, string | { name: string; category: string }[]> = {
   'memories.disconnected': 'Nie połączono',
   'memories.connectionSuccess': 'Połączono z Immich',
   'memories.connectionError': 'Nie udało się połączyć z Immich',
-  'memories.saved': 'Ustawienia Immich zostały zapisane',
+  'memories.saved': 'Ustawienia {provider_name} zostały zapisane',
   'memories.providerDisconnectedBanner': 'Połączenie z {provider_name} zostało utracone. Połącz ponownie w Ustawieniach, aby wyświetlać zdjęcia.',
   'memories.saveError': 'Nie można zapisać ustawień {provider_name}',
   'memories.addPhotos': 'Dodaj zdjęcia',

@@ -1460,7 +1460,7 @@ const cs: Record<string, string | { name: string; category: string }[]> = {
   'memories.disconnected': 'Nepřipojeno',
   'memories.connectionSuccess': 'Připojeno k Immich',
   'memories.connectionError': 'Nepodařilo se připojit k Immich',
-  'memories.saved': 'Nastavení Immich uloženo',
+  'memories.saved': 'Nastavení {provider_name} uloženo',
   'memories.providerDisconnectedBanner': 'Vaše připojení k {provider_name} bylo ztraceno. Obnovte připojení v Nastavení pro zobrazení fotek.',
   'memories.saveError': 'Nepodařilo se uložit nastavení {provider_name}',
   'memories.addPhotos': 'Přidat fotky',

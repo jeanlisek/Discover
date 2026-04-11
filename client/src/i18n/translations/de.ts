@@ -1460,7 +1460,7 @@ const de: Record<string, string | { name: string; category: string }[]> = {
   'memories.disconnected': 'Nicht verbunden',
   'memories.connectionSuccess': 'Verbindung zu Immich hergestellt',
   'memories.connectionError': 'Verbindung zu Immich fehlgeschlagen',
-  'memories.saved': 'Immich-Einstellungen gespeichert',
+  'memories.saved': '{provider_name}-Einstellungen gespeichert',
   'memories.providerDisconnectedBanner': 'Deine {provider_name}-Verbindung wurde getrennt. Verbinde erneut in den Einstellungen, um Fotos anzuzeigen.',
   'memories.saveError': '{provider_name}-Einstellungen konnten nicht gespeichert werden',
   'memories.addPhotos': 'Fotos hinzufügen',

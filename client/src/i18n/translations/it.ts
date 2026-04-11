@@ -1459,7 +1459,7 @@ const it: Record<string, string | { name: string; category: string }[]> = {
   'memories.disconnected': 'Non connesso',
   'memories.connectionSuccess': 'Connesso a Immich',
   'memories.connectionError': 'Impossibile connettersi a Immich',
-  'memories.saved': 'Impostazioni Immich salvate',
+  'memories.saved': 'Impostazioni {provider_name} salvate',
   'memories.providerDisconnectedBanner': 'La connessione a {provider_name} è persa. Riconnetti nelle Impostazioni per visualizzare le foto.',
   'memories.saveError': 'Impossibile salvare le impostazioni di {provider_name}',
   'memories.addPhotos': 'Aggiungi foto',

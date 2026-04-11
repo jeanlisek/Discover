@@ -1458,7 +1458,7 @@ const fr: Record<string, string> = {
   'memories.disconnected': 'Non connecté',
   'memories.connectionSuccess': 'Connecté à Immich',
   'memories.connectionError': 'Impossible de se connecter à Immich',
-  'memories.saved': 'Paramètres Immich enregistrés',
+  'memories.saved': 'Paramètres {provider_name} enregistrés',
   'memories.providerDisconnectedBanner': 'Votre connexion {provider_name} est perdue. Reconnectez-vous dans les Paramètres pour voir les photos.',
   'memories.saveError': 'Impossible d\'enregistrer les paramètres de {provider_name}',
   'memories.oldest': 'Plus anciennes',

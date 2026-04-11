@@ -1458,7 +1458,7 @@ const nl: Record<string, string> = {
   'memories.disconnected': 'Niet verbonden',
   'memories.connectionSuccess': 'Verbonden met Immich',
   'memories.connectionError': 'Kon niet verbinden met Immich',
-  'memories.saved': 'Immich-instellingen opgeslagen',
+  'memories.saved': '{provider_name}-instellingen opgeslagen',
   'memories.providerDisconnectedBanner': 'Je {provider_name}-verbinding is verbroken. Maak opnieuw verbinding in Instellingen om foto\'s te bekijken.',
   'memories.saveError': '{provider_name}-instellingen konden niet worden opgeslagen',
   'memories.oldest': 'Oudste eerst',
