@@ -85,6 +85,7 @@ export default function VacayCalendar() {
             blockWeekends={blockWeekends}
             weekendDays={weekendDays}
             tripDates={tripDates}
+            weekStart={plan?.week_start ?? 1}
           />
         ))}
       </div>
