@@ -471,9 +471,13 @@ export default function JourneyDetailPage() {
                 <div className="flex flex-col gap-2.5">
                   {current.contributors.map((c: any) => (
                     <div key={c.user_id} className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-[11px] font-semibold">
-                        {(c.username || '?')[0].toUpperCase()}
-                      </div>
+                      {c.avatar_url ? (
+                        <img src={c.avatar_url} className="w-7 h-7 rounded-full object-cover" alt="" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center text-[11px] font-semibold">
+                          {(c.username || '?')[0].toUpperCase()}
+                        </div>
+                      )}
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-medium text-zinc-900 dark:text-white">{c.username}</div>
                       </div>

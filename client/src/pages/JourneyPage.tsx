@@ -158,7 +158,7 @@ export default function JourneyPage() {
                     </button>
                     <button
                       onClick={() => openCreateModal(activeSuggestion.id)}
-                      className="px-3 py-1.5 rounded-lg bg-white text-zinc-900 text-[12px] font-medium hover:bg-zinc-100"
+                      className="px-3 py-1.5 rounded-lg !bg-white !text-zinc-900 text-[12px] font-medium hover:!bg-zinc-100"
                     >
                       {t('journey.frontpage.createJourney')}
                     </button>
@@ -336,7 +336,11 @@ export default function JourneyPage() {
                       }`}>
                         {selected && <Check size={12} className="text-white dark:text-zinc-900" />}
                       </div>
-                      <div className="w-12 h-12 rounded-lg flex-shrink-0" style={{ background: pickGradient(trip.id) }} />
+                      <div className="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden" style={{ background: pickGradient(trip.id) }}>
+                        {trip.cover_image && (
+                          <img src={trip.cover_image} className="w-full h-full object-cover" alt="" />
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[14px] font-semibold text-zinc-900 dark:text-white">{trip.title}</div>
                         <div className="text-[12px] text-zinc-500 flex items-center gap-2.5 mt-0.5">

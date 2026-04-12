@@ -83,6 +83,14 @@ export function createJourney(userId: number, data: {
     for (const tripId of data.trip_ids) {
       addTripToJourney(journeyId, tripId, userId);
     }
+
+    // inherit cover image from first selected trip
+    const firstTrip = db.prepare('SELECT cover_image FROM trips WHERE id = ?').get(data.trip_ids[0]) as { cover_image: string | null } | undefined;
+    if (firstTrip?.cover_image) {
+      // trip stores full path (/uploads/covers/x.jpg), journey stores relative (covers/x.jpg)
+      const relativePath = firstTrip.cover_image.replace(/^\/uploads\//, '');
+      db.prepare('UPDATE journeys SET cover_image = ? WHERE id = ?').run(relativePath, journeyId);
+    }
   }
 
   return db.prepare('SELECT * FROM journeys WHERE id = ?').get(journeyId) as Journey;
@@ -125,11 +133,15 @@ export function getJourneyFull(journeyId: number, userId: number) {
   `).all(journeyId);
 
   // contributors
-  const contributors = db.prepare(`
+  const contributorsRaw = db.prepare(`
     SELECT jc.journey_id, jc.user_id, jc.role, jc.added_at, u.username, u.avatar
     FROM journey_contributors jc JOIN users u ON jc.user_id = u.id
     WHERE jc.journey_id = ? ORDER BY jc.added_at
-  `).all(journeyId);
+  `).all(journeyId) as any[];
+  const contributors = contributorsRaw.map(c => ({
+    ...c,
+    avatar_url: c.avatar ? `/uploads/avatars/${c.avatar}` : null,
+  }));
 
   // stats
   const entryCount = entries.filter(e => e.type === 'entry').length;
@@ -221,8 +233,8 @@ export function syncTripPlaces(journeyId: number, tripId: number, authorId: numb
   const places = db.prepare(`
     SELECT p.*, da.day_id, d.date as day_date, da.assignment_time, da.assignment_end_time, d.day_number
     FROM places p
-    LEFT JOIN day_assignments da ON da.place_id = p.id
-    LEFT JOIN days d ON da.day_id = d.id
+    INNER JOIN day_assignments da ON da.place_id = p.id
+    INNER JOIN days d ON da.day_id = d.id
     WHERE p.trip_id = ?
     ORDER BY d.day_number ASC, da.order_index ASC
   `).all(tripId) as any[];
@@ -303,11 +315,11 @@ export function onPlaceCreated(tripId: number, placeId: number) {
   const place = db.prepare(`
     SELECT p.*, da.day_id, d.date as day_date, da.assignment_time, d.day_number
     FROM places p
-    LEFT JOIN day_assignments da ON da.place_id = p.id
-    LEFT JOIN days d ON da.day_id = d.id
+    INNER JOIN day_assignments da ON da.place_id = p.id
+    INNER JOIN days d ON da.day_id = d.id
     WHERE p.id = ?
   `).get(placeId) as any;
-  if (!place) return;
+  if (!place) return; // not assigned to a day yet — skip
 
   const now = ts();
   for (const link of links) {
@@ -317,7 +329,7 @@ export function onPlaceCreated(tripId: number, placeId: number) {
     if (already) continue;
 
     const journey = db.prepare('SELECT user_id FROM journeys WHERE id = ?').get(link.journey_id) as { user_id: number };
-    const entryDate = place.day_date || new Date().toISOString().split('T')[0];
+    const entryDate = place.day_date;
 
     db.prepare(`
       INSERT INTO journey_entries (journey_id, source_trip_id, source_place_id, author_id, type, title, entry_date, entry_time, location_name, location_lat, location_lng, sort_order, created_at, updated_at)
@@ -701,7 +713,7 @@ export function getSuggestions(userId: number) {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   return db.prepare(`
     SELECT t.id, t.title, t.start_date, t.end_date, t.cover_image,
-      (SELECT COUNT(*) FROM places WHERE trip_id = t.id) as place_count
+      (SELECT COUNT(*) FROM places p INNER JOIN day_assignments da ON da.place_id = p.id WHERE p.trip_id = t.id) as place_count
     FROM trips t
     LEFT JOIN trip_members tm ON t.id = tm.trip_id AND tm.user_id = ?
     WHERE (t.user_id = ? OR tm.user_id = ?)
@@ -718,7 +730,7 @@ export function getSuggestions(userId: number) {
 export function listUserTrips(userId: number) {
   return db.prepare(`
     SELECT t.id, t.title, t.start_date, t.end_date, t.cover_image,
-      (SELECT COUNT(*) FROM places WHERE trip_id = t.id) as place_count
+      (SELECT COUNT(*) FROM places p INNER JOIN day_assignments da ON da.place_id = p.id WHERE p.trip_id = t.id) as place_count
     FROM trips t
     LEFT JOIN trip_members tm ON t.id = tm.trip_id AND tm.user_id = ?
     WHERE t.user_id = ? OR tm.user_id = ?

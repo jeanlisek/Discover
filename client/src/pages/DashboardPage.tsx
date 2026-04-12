@@ -524,7 +524,7 @@ function TripListItem({ trip, onEdit, onCopy, onDelete, onArchive, onClick, t, l
                 : status === 'today' ? t('dashboard.status.today')
                 : status === 'tomorrow' ? t('dashboard.status.tomorrow')
                 : status === 'future' ? t('dashboard.status.daysLeft', { count: daysUntil(trip.start_date) })
-                : t('dashboard.status.past')}
+                : t('dashboard.mobile.completed')}
             </span>
           )}
         </div>
@@ -1065,7 +1065,7 @@ export default function DashboardPage(): React.ReactElement {
           )}
 
           {/* Trips — desktop grid or list */}
-          {!isLoading && (viewMode === 'grid' ? rest : rest).length > 0 && (
+          {!isLoading && (viewMode === 'grid' ? rest : trips).length > 0 && (
             viewMode === 'grid' ? (
               <div className="trip-grid hidden md:grid" style={{ gap: 16, marginBottom: 40 }}>
                 {rest.map(trip => (
@@ -1083,7 +1083,7 @@ export default function DashboardPage(): React.ReactElement {
               </div>
             ) : (
               <div className="hidden md:flex" style={{ flexDirection: 'column', gap: 8, marginBottom: 40 }}>
-                {rest.map(trip => (
+                {trips.map(trip => (
                   <TripListItem
                     key={trip.id}
                     trip={trip}
