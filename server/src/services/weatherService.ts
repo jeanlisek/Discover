@@ -197,7 +197,10 @@ export async function getWeather(
     if (diffDays > -1) {
       const month = targetDate.getMonth() + 1;
       const day = targetDate.getDate();
-      const refYear = targetDate.getFullYear() - 1;
+      let refYear = targetDate.getFullYear() - 1;
+      // Archive API only has data up to yesterday — go back further if needed
+      const yesterday = new Date(now.getTime() - 86400000);
+      if (new Date(refYear, month - 1, day + 2) > yesterday) refYear--;
       const startDate = new Date(refYear, month - 1, day - 2);
       const endDate = new Date(refYear, month - 1, day + 2);
       const startStr = startDate.toISOString().slice(0, 10);
@@ -299,7 +302,10 @@ export async function getDetailedWeather(
 
   // Climate / archive path (> 16 days out)
   if (diffDays > 16) {
-    const refYear = targetDate.getFullYear() - 1;
+    let refYear = targetDate.getFullYear() - 1;
+    // Archive API only has data up to yesterday — go back further if needed
+    const yesterday = new Date(now.getTime() - 86400000);
+    if (new Date(refYear, targetDate.getMonth(), targetDate.getDate()) > yesterday) refYear--;
     const refDateStr = `${refYear}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
 
     const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}`
