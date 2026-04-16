@@ -1614,6 +1614,19 @@ function runMigrations(db: Database.Database): void {
     // Migration 102: Add check_in_end column for check-in time ranges
     () => {
       try { db.exec('ALTER TABLE day_accommodations ADD COLUMN check_in_end TEXT'); } catch (err: any) { if (!err.message?.includes('duplicate column name')) throw err; }
+    // Migration 103: System notices — user tracking columns + dismissals table
+    () => {
+      db.exec(`ALTER TABLE users ADD COLUMN first_seen_version TEXT NOT NULL DEFAULT '0.0.0'`);
+      db.exec(`ALTER TABLE users ADD COLUMN login_count INTEGER NOT NULL DEFAULT 0`);
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS user_notice_dismissals (
+          user_id      INTEGER NOT NULL,
+          notice_id    TEXT    NOT NULL,
+          dismissed_at INTEGER NOT NULL,
+          PRIMARY KEY (user_id, notice_id),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
     },
   ];
 

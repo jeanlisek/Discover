@@ -6,6 +6,7 @@ export const ADDON_IDS = {
   VACAY: 'vacay',
   ATLAS: 'atlas',
   COLLAB: 'collab',
+  JOURNEY: 'journey',
 } as const;
 
 export type AddonId = typeof ADDON_IDS[keyof typeof ADDON_IDS];

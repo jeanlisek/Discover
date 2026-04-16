@@ -2186,6 +2186,38 @@ const cs: Record<string, string | { name: string; category: string }[]> = {
   'oauth.scope.geo:read.description': 'Vyhledávat místa, řešit URL map a zpětně geokódovat souřadnice',
   'oauth.scope.weather:read.label': 'Předpovědi počasí',
   'oauth.scope.weather:read.description': 'Získávat předpovědi počasí pro místa a data výletu',
+
+  // System notices
+  'system_notice.welcome_v1.title': 'Vítejte v TREK',
+  'system_notice.welcome_v1.body': 'Váš kompletní plánovač cest. Vytvářejte itineráře, sdílejte výlety s přáteli a zůstaňte organizovaní — online i offline.',
+  'system_notice.welcome_v1.cta_label': 'Naplánovat cestu',
+  'system_notice.welcome_v1.hero_alt': 'Malebné cestovní místo s rozhraním TREK',
+  'system_notice.welcome_v1.highlight_plan': 'Denní itineráře pro každou cestu',
+  'system_notice.welcome_v1.highlight_share': 'Spolupráce s cestovními partnery',
+  'system_notice.welcome_v1.highlight_offline': 'Funguje offline na mobilu',
+  'system_notice.dev_test_modal.title': '[Dev] Test notice',
+  'system_notice.dev_test_modal.body': 'This is a dev-only test notice.',
+  'system_notice.pager.prev': 'Předchozí oznámení',
+  'system_notice.pager.next': 'Další oznámení',
+  'system_notice.pager.counter': '{current} / {total}',
+  'system_notice.pager.goto': 'Přejít na oznámení {n}',
+  'system_notice.pager.position': 'Oznámení {current} z {total}',
+  // System notices — 3.0.0 upgrade
+  'system_notice.v3_photos.title': 'Fotografie přesunuty ve verzi 3.0',
+  'system_notice.v3_photos.body': '**Fotografie** v Plánovacím nástroji byly odebrány. Vaše fotografie jsou v bezpečí — TREK nikdy neupravoval vaši knihovnu Immich nebo Synology.\n\nFotografie jsou nyní dostupné v doplňku **Journey**. Journey je volitelný — pokud ještě není k dispozici, požádejte svého správce, aby ho aktivoval v Admin → Doplňky.',
+  'system_notice.v3_journey.title': 'Poznejte Journey — cest. denník',
+  'system_notice.v3_journey.body': 'Dokumentujte své cesty jako bohaté příběhy s časovnicemi, galeriemi fotek a interaktivními mapami.',
+  'system_notice.v3_journey.cta_label': 'Otevřít Journey',
+  'system_notice.v3_journey.highlight_timeline': 'Denní časovnice a galerie',
+  'system_notice.v3_journey.highlight_photos': 'Import z Immich nebo Synology',
+  'system_notice.v3_journey.highlight_share': 'Sdílet veřejně — bez přihlašování',
+  'system_notice.v3_journey.highlight_export': 'Export jako PDF fotokniha',
+  'system_notice.v3_features.title': 'Další novinky ve verzi 3.0',
+  'system_notice.v3_features.body': 'Několik dalších změn, které stojí za pozornost.',
+  'system_notice.v3_features.highlight_dashboard': 'Předesign dashboardu mobile-first',
+  'system_notice.v3_features.highlight_offline': 'Plný offline režim jako PWA',
+  'system_notice.v3_features.highlight_search': 'Autodoplňování vyhledávání míst',
+  'system_notice.v3_features.highlight_import': 'Import míst ze souborů KMZ/KML',
 }
 
 export default cs

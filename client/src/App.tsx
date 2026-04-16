@@ -2,6 +2,7 @@ import React, { useEffect, ReactNode } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import { useSettingsStore } from './store/settingsStore'
+import { useAddonStore } from './store/addonStore'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import TripPlannerPage from './pages/TripPlannerPage'
@@ -24,17 +25,22 @@ import { usePermissionsStore, PermissionLevel } from './store/permissionsStore'
 import { useInAppNotificationListener } from './hooks/useInAppNotificationListener.ts'
 import { registerSyncTriggers, unregisterSyncTriggers } from './sync/syncTriggers'
 import OfflineBanner from './components/Layout/OfflineBanner'
+import { SystemNoticeHost } from './components/SystemNotices/SystemNoticeHost.js'
+// Notice action registrations (side-effect imports):
+import './pages/Trips/noticeActions.js'
 
 interface ProtectedRouteProps {
   children: ReactNode
   adminRequired?: boolean
+  addonId?: string
 }
 
-function ProtectedRoute({ children, adminRequired = false }: ProtectedRouteProps) {
+function ProtectedRoute({ children, adminRequired = false, addonId }: ProtectedRouteProps) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const user = useAuthStore((s) => s.user)
   const isLoading = useAuthStore((s) => s.isLoading)
   const appRequireMfa = useAuthStore((s) => s.appRequireMfa)
+  const addonStore = useAddonStore()
   const { t } = useTranslation()
   const location = useLocation()
 
@@ -67,6 +73,10 @@ function ProtectedRoute({ children, adminRequired = false }: ProtectedRouteProps
     return <Navigate to="/dashboard" replace />
   }
 
+  if (addonId && addonStore.loaded && !addonStore.isEnabled(addonId)) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   return (
     <div className="flex flex-col h-screen md:block md:h-auto">
       <div className="flex-1 overflow-y-auto md:overflow-visible">{children}</div>
@@ -92,6 +102,7 @@ function RootRedirect() {
 export default function App() {
   const { loadUser, isAuthenticated, demoMode, setDemoMode, setDevMode, setIsPrerelease, setAppVersion, setHasMapsKey, setServerTimezone, setAppRequireMfa, setTripRemindersEnabled } = useAuthStore()
   const { loadSettings } = useSettingsStore()
+  const { loadAddons } = useAddonStore()
 
   useEffect(() => {
     if (!location.pathname.startsWith('/shared/') && !location.pathname.startsWith('/public/') && !location.pathname.startsWith('/login')) {
@@ -145,6 +156,7 @@ export default function App() {
   useEffect(() => {
     if (isAuthenticated) {
       loadSettings()
+      loadAddons()
     }
   }, [isAuthenticated])
 
@@ -182,8 +194,11 @@ export default function App() {
     applyDark(mode === true || mode === 'dark')
   }, [settings.dark_mode, isSharedPage])
 
+  const isAuthPage = location.pathname.startsWith('/login') || location.pathname.startsWith('/register')
+
   return (
     <TranslationProvider>
+      {!isAuthPage && <SystemNoticeHost />}
       <ToastContainer />
       <OfflineBanner />
       <Routes>
@@ -253,7 +268,7 @@ export default function App() {
         <Route
           path="/journey"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute addonId="journey">
               <JourneyPage />
             </ProtectedRoute>
           }
@@ -261,7 +276,7 @@ export default function App() {
         <Route
           path="/journey/:id"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute addonId="journey">
               <JourneyDetailPage />
             </ProtectedRoute>
           }

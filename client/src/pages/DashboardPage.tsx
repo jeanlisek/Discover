@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { tripsApi } from '../api/client'
 import { tripRepo } from '../repo/tripRepo'
 import { useAuthStore } from '../store/authStore'
@@ -689,6 +689,7 @@ export default function DashboardPage(): React.ReactElement {
   }
 
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const toast = useToast()
   const { t, locale } = useTranslation()
   const { demoMode, user } = useAuthStore()
@@ -708,6 +709,13 @@ export default function DashboardPage(): React.ReactElement {
     }
     return () => { document.body.style.overflow = '' }
   }, [showWidgetSettings])
+
+  useEffect(() => {
+    if (searchParams.get('create') === '1') {
+      setShowForm(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams])
 
   useEffect(() => { loadTrips() }, [])
 

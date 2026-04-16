@@ -334,8 +334,8 @@ export function registerUser(body: {
 
   try {
     const result = db.prepare(
-      'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)'
-    ).run(username, email, password_hash, role);
+      'INSERT INTO users (username, email, password_hash, role, first_seen_version, login_count) VALUES (?, ?, ?, ?, ?, 0)'
+    ).run(username, email, password_hash, role, process.env.APP_VERSION || '0.0.0');
 
     const user = { id: result.lastInsertRowid, username, email, role, avatar: null, mfa_enabled: false };
     const token = generateToken(user);
@@ -408,7 +408,7 @@ export function loginUser(body: {
     return { mfa_required: true, mfa_token };
   }
 
-  db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+  db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP, login_count = login_count + 1 WHERE id = ?').run(user.id);
   const token = generateToken(user);
   const userSafe = stripUserForClient(user) as Record<string, unknown>;
 
@@ -972,7 +972,7 @@ export function verifyMfaLogin(body: {
         user.id
       );
     }
-    db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(user.id);
+    db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP, login_count = login_count + 1 WHERE id = ?').run(user.id);
     const sessionToken = generateToken(user);
     const userSafe = stripUserForClient(user) as Record<string, unknown>;
     return {

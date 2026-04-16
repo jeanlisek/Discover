@@ -91,6 +91,8 @@ const RESET_TABLES = [
   'notification_channel_preferences',
   'notifications',
   'audit_log',
+  // System notices
+  'user_notice_dismissals',
   // User data
   'settings',
   'mcp_tokens',

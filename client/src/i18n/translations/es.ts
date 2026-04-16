@@ -2188,6 +2188,38 @@ const es: Record<string, string> = {
   'oauth.scope.geo:read.description': 'Buscar lugares, resolver URLs de mapa y geocodificar coordenadas',
   'oauth.scope.weather:read.label': 'Previsiones meteorológicas',
   'oauth.scope.weather:read.description': 'Obtener previsiones meteorológicas para lugares y fechas del viaje',
+
+  // System notices
+  'system_notice.welcome_v1.title': 'Bienvenido a TREK',
+  'system_notice.welcome_v1.body': 'Tu planificador de viajes todo en uno. Crea itinerarios, comparte viajes con amigos y mantente organizado, online o sin conexión.',
+  'system_notice.welcome_v1.cta_label': 'Planificar un viaje',
+  'system_notice.welcome_v1.hero_alt': 'Destino de viaje pintoresco con la interfaz de TREK',
+  'system_notice.welcome_v1.highlight_plan': 'Itinerarios día a día para cualquier viaje',
+  'system_notice.welcome_v1.highlight_share': 'Colabora con tus compañeros de viaje',
+  'system_notice.welcome_v1.highlight_offline': 'Funciona sin conexión en móvil',
+  'system_notice.dev_test_modal.title': '[Dev] Test notice',
+  'system_notice.dev_test_modal.body': 'This is a dev-only test notice.',
+  'system_notice.pager.prev': 'Aviso anterior',
+  'system_notice.pager.next': 'Siguiente aviso',
+  'system_notice.pager.counter': '{current} / {total}',
+  'system_notice.pager.goto': 'Ir al aviso {n}',
+  'system_notice.pager.position': 'Aviso {current} de {total}',
+  // System notices — 3.0.0 upgrade
+  'system_notice.v3_photos.title': 'Las fotos se han movido en 3.0',
+  'system_notice.v3_photos.body': '**Fotos** en el Planificador de Viajes han sido eliminadas. Tus fotos están a salvo — TREK nunca modificó tu biblioteca de Immich o Synology.\n\nLas fotos ahora viven en el addon **Journey**. Journey es opcional — si aún no está disponible, pide a tu admin que lo active en Admin → Complementos.',
+  'system_notice.v3_journey.title': 'Conoce Journey — diario de viaje',
+  'system_notice.v3_journey.body': 'Documenta tus viajes como historias enriquecidas con cronologías, galerías de fotos y mapas interactivos.',
+  'system_notice.v3_journey.cta_label': 'Abrir Journey',
+  'system_notice.v3_journey.highlight_timeline': 'Cronología y galería por día',
+  'system_notice.v3_journey.highlight_photos': 'Importar desde Immich o Synology',
+  'system_notice.v3_journey.highlight_share': 'Compartir públicamente — sin inicio de sesión',
+  'system_notice.v3_journey.highlight_export': 'Exportar como libro de fotos PDF',
+  'system_notice.v3_features.title': 'Más novedades en 3.0',
+  'system_notice.v3_features.body': 'Otras cosas que vale la pena conocer de esta versión.',
+  'system_notice.v3_features.highlight_dashboard': 'Rediseño del panel mobile-first',
+  'system_notice.v3_features.highlight_offline': 'Modo sin conexión completo como PWA',
+  'system_notice.v3_features.highlight_search': 'Autocompletado de lugares en tiempo real',
+  'system_notice.v3_features.highlight_import': 'Importar lugares desde archivos KMZ/KML',
 }
 
 export default es

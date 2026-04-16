@@ -2183,6 +2183,38 @@ const zhTw: Record<string, string> = {
   'oauth.scope.geo:read.description': '搜尋地點、解析地圖 URL 及反向地理編碼坐標',
   'oauth.scope.weather:read.label': '天氣預報',
   'oauth.scope.weather:read.description': '取得行程地點及日期的天氣預報',
+
+  // System notices
+  'system_notice.welcome_v1.title': '歡迎使用 TREK',
+  'system_notice.welcome_v1.body': '您的全方位旅遊規劃器。建立行程、與朋友分享旅遊，隨時保持條理分明——無論線上或離線皆可。',
+  'system_notice.welcome_v1.cta_label': '規劃行程',
+  'system_notice.welcome_v1.hero_alt': '風景優美的旅遊目的地與 TREK 介面',
+  'system_notice.welcome_v1.highlight_plan': '逐日行程規劃',
+  'system_notice.welcome_v1.highlight_share': '與旅伴協作規劃',
+  'system_notice.welcome_v1.highlight_offline': '行動裝置支援離線使用',
+  'system_notice.dev_test_modal.title': '[Dev] Test notice',
+  'system_notice.dev_test_modal.body': 'This is a dev-only test notice.',
+  'system_notice.pager.prev': '上一則通知',
+  'system_notice.pager.next': '下一則通知',
+  'system_notice.pager.counter': '{current} / {total}',
+  'system_notice.pager.goto': '前往通知 {n}',
+  'system_notice.pager.position': '通知 {current}/{total}',
+  // System notices — 3.0.0 upgrade
+  'system_notice.v3_photos.title': '3.0 版相片已移至',
+  'system_notice.v3_photos.body': '行程規劃器中的​**相片**標籤已被移除。您的相片安全— TREK 從未修改您的 Immich 或 Synology 相簿。\n\n相片現在位於 **Journey** 附加元件中。Journey 為選用 — 若尚未啟用，請聯絡管理員於 Admin → 附加元件 中開啟。',
+  'system_notice.v3_journey.title': '認識 Journey — 旅行日記',
+  'system_notice.v3_journey.body': '將您的旅程記錄為具有時間軸、相片畫庫與互動地圖的豐富旅行故事。',
+  'system_notice.v3_journey.cta_label': '開啟 Journey',
+  'system_notice.v3_journey.highlight_timeline': '每日時間軸與畫庫',
+  'system_notice.v3_journey.highlight_photos': '從 Immich 或 Synology 匯入',
+  'system_notice.v3_journey.highlight_share': '公開分享 — 無需登入',
+  'system_notice.v3_journey.highlight_export': '匯出為 PDF 相簿书',
+  'system_notice.v3_features.title': '3.0 版更多亮點',
+  'system_notice.v3_features.body': '這個版本還有一些其他專項值得了解。',
+  'system_notice.v3_features.highlight_dashboard': '行動先行儀表板重設計',
+  'system_notice.v3_features.highlight_offline': '作為 PWA 的完整離線模式',
+  'system_notice.v3_features.highlight_search': '地點搜尋即時自動補全',
+  'system_notice.v3_features.highlight_import': '從 KMZ/KML 檔案匯入地點',
 }
 
 export default zhTw

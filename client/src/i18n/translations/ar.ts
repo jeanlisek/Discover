@@ -1979,6 +1979,38 @@ const ar: Record<string, string | { name: string; category: string }[]> = {
   'oauth.scope.geo:read.description': 'البحث عن مواقع وحل عناوين الخرائط والترميز الجغرافي العكسي للإحداثيات',
   'oauth.scope.weather:read.label': 'توقعات الطقس',
   'oauth.scope.weather:read.description': 'جلب توقعات الطقس لمواقع الرحلة وتواريخها',
+
+  // System notices
+  'system_notice.welcome_v1.title': 'مرحبًا بك في TREK',
+  'system_notice.welcome_v1.body': 'مخطط رحلاتك الشامل. أنشئ جداول السفر، وشارك رحلاتك مع الأصدقاء، وابقَ منظمًا — سواء كنت متصلاً بالإنترنت أم لا.',
+  'system_notice.welcome_v1.cta_label': 'خطط لرحلة',
+  'system_notice.welcome_v1.hero_alt': 'وجهة سفر خلابة مع واجهة تطبيق TREK',
+  'system_notice.welcome_v1.highlight_plan': 'جداول رحلات يومية لكل سفرة',
+  'system_notice.welcome_v1.highlight_share': 'تعاون مع شركاء السفر',
+  'system_notice.welcome_v1.highlight_offline': 'يعمل بلا إنترنت على الهاتف',
+  'system_notice.dev_test_modal.title': '[Dev] Test notice',
+  'system_notice.dev_test_modal.body': 'This is a dev-only test notice.',
+  'system_notice.pager.prev': 'الإشعار السابق',
+  'system_notice.pager.next': 'الإشعار التالي',
+  'system_notice.pager.counter': '{current} / {total}',
+  'system_notice.pager.goto': 'الانتقال إلى الإشعار {n}',
+  'system_notice.pager.position': 'الإشعار {current} من {total}',
+  // System notices — 3.0.0 upgrade
+  'system_notice.v3_photos.title': 'تم نقل الصور في الإصدار 3.0',
+  'system_notice.v3_photos.body': 'تمت إزالة تبويب ​**الصور**​ من مخطط الرحلة. صورك آمنة — لم يعدّل TREK مكتبتك على Immich أو Synology قطّ.\n\nتعيش الصور الآن في إضافة **Journey**. Journey اختيارية — إن لم تكن متاحة بعد، اطلب من المسؤول تفعيلها عبر Admin ← الإضافات.',
+  'system_notice.v3_journey.title': 'تعرّف على Journey — مذكرة سفر',
+  'system_notice.v3_journey.body': 'وثّق رحلاتك كقصص غنية بخطوط زمنية ومعارض صور وخرائط تفاعلية.',
+  'system_notice.v3_journey.cta_label': 'فتح Journey',
+  'system_notice.v3_journey.highlight_timeline': 'جدول زمني يومي ومعرض',
+  'system_notice.v3_journey.highlight_photos': 'استيراد من Immich أو Synology',
+  'system_notice.v3_journey.highlight_share': 'مشاركة علنية — دون تسجيل دخول',
+  'system_notice.v3_journey.highlight_export': 'تصدير كألبوم صور PDF',
+  'system_notice.v3_features.title': 'مزيد من مميزات 3.0',
+  'system_notice.v3_features.body': 'بعض الجديد الآخر الجدير بالمعرفة في هذا الإصدار.',
+  'system_notice.v3_features.highlight_dashboard': 'إعادة تصميم لوحة التحكم mobile-first',
+  'system_notice.v3_features.highlight_offline': 'وضع لا اتصال كامل كتطبيق PWA',
+  'system_notice.v3_features.highlight_search': 'إكمال تلقائي في الوقت الفعلي',
+  'system_notice.v3_features.highlight_import': 'استيراد أماكن من ملفات KMZ/KML',
 }
 
 export default ar

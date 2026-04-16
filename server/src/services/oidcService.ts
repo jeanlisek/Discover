@@ -287,8 +287,8 @@ export function findOrCreateUser(
   if (existing) username = `${username}_${Date.now() % 10000}`;
 
   const result = db.prepare(
-    'INSERT INTO users (username, email, password_hash, role, oidc_sub, oidc_issuer) VALUES (?, ?, ?, ?, ?, ?)',
-  ).run(username, email, hash, role, sub, config.issuer);
+    'INSERT INTO users (username, email, password_hash, role, oidc_sub, oidc_issuer, first_seen_version, login_count) VALUES (?, ?, ?, ?, ?, ?, ?, 0)',
+  ).run(username, email, hash, role, sub, config.issuer, process.env.APP_VERSION || '0.0.0');
 
   if (validInvite) {
     const updated = db.prepare(
@@ -308,5 +308,5 @@ export function findOrCreateUser(
 // ---------------------------------------------------------------------------
 
 export function touchLastLogin(userId: number): void {
-  db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?').run(userId);
+  db.prepare('UPDATE users SET last_login = CURRENT_TIMESTAMP, login_count = login_count + 1 WHERE id = ?').run(userId);
 }

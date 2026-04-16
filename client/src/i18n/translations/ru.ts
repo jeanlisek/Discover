@@ -2182,6 +2182,38 @@ const ru: Record<string, string> = {
   'oauth.scope.geo:read.description': 'Поиск мест, разрешение URL карт и обратное геокодирование координат',
   'oauth.scope.weather:read.label': 'Прогнозы погоды',
   'oauth.scope.weather:read.description': 'Получение прогнозов погоды для мест и дат поездки',
+
+  // System notices
+  'system_notice.welcome_v1.title': 'Добро пожаловать в TREK',
+  'system_notice.welcome_v1.body': 'Ваш универсальный планировщик путешествий. Создавайте маршруты, делитесь поездками с друзьями и оставайтесь организованными — онлайн и офлайн.',
+  'system_notice.welcome_v1.cta_label': 'Спланировать поездку',
+  'system_notice.welcome_v1.hero_alt': 'Живописное место назначения с интерфейсом TREK',
+  'system_notice.welcome_v1.highlight_plan': 'Маршруты по дням',
+  'system_notice.welcome_v1.highlight_share': 'Совместное планирование с партнёрами',
+  'system_notice.welcome_v1.highlight_offline': 'Работает офлайн на мобильном',
+  'system_notice.dev_test_modal.title': '[Dev] Test notice',
+  'system_notice.dev_test_modal.body': 'This is a dev-only test notice.',
+  'system_notice.pager.prev': 'Предыдущее уведомление',
+  'system_notice.pager.next': 'Следующее уведомление',
+  'system_notice.pager.counter': '{current} / {total}',
+  'system_notice.pager.goto': 'Перейти к уведомлению {n}',
+  'system_notice.pager.position': 'Уведомление {current} из {total}',
+  // System notices — 3.0.0 upgrade
+  'system_notice.v3_photos.title': 'Фото перемещены в версии 3.0',
+  'system_notice.v3_photos.body': 'Вкладка **Фото** в Планировщике путешествий удалена. Ваши фото в безопасности — TREK никогда не изменял вашу библиотеку Immich или Synology.\n\nФото теперь доступны в дополнении **Journey**. Journey необязателен — если он ещё недоступен, попросите администратора включить его в разделе Admin → Дополнения.',
+  'system_notice.v3_journey.title': 'Знакомьтесь с Journey',
+  'system_notice.v3_journey.body': 'Документируйте путешествия в виде рассказов с хронологиями, фотогалереями и интерактивными картами.',
+  'system_notice.v3_journey.cta_label': 'Открыть Journey',
+  'system_notice.v3_journey.highlight_timeline': 'Ежедневная хронология и галерея',
+  'system_notice.v3_journey.highlight_photos': 'Импорт из Immich или Synology',
+  'system_notice.v3_journey.highlight_share': 'Общий доступ — без входа',
+  'system_notice.v3_journey.highlight_export': 'Экспорт в PDF-фотокнигу',
+  'system_notice.v3_features.title': 'Ещё нового в версии 3.0',
+  'system_notice.v3_features.body': 'Несколько других важных новшеств в этом релизе.',
+  'system_notice.v3_features.highlight_dashboard': 'Переработанная панель в mobile-first стиле',
+  'system_notice.v3_features.highlight_offline': 'Полный офлайн-режим как PWA',
+  'system_notice.v3_features.highlight_search': 'Автодополнение поиска мест в реальном времени',
+  'system_notice.v3_features.highlight_import': 'Импорт мест из KMZ/KML-файлов',
 }
 
 export default ru

@@ -6,6 +6,7 @@ import type { User } from '../types'
 import { getApiErrorMessage } from '../types'
 import { tripSyncManager } from '../sync/tripSyncManager'
 import { clearAll } from '../db/offlineDb'
+import { useSystemNoticeStore } from './systemNoticeStore.js'
 
 interface AuthResponse {
   user: User
@@ -91,6 +92,9 @@ export const useAuthStore = create<AuthState>()(
       })
       connect()
       tripSyncManager.syncAll().catch(console.error)
+      if (!data.user?.must_change_password) {
+        useSystemNoticeStore.getState().fetch()
+      }
       return data as AuthResponse
     } catch (err: unknown) {
       const error = getApiErrorMessage(err, 'Login failed')
@@ -112,6 +116,9 @@ export const useAuthStore = create<AuthState>()(
       })
       connect()
       tripSyncManager.syncAll().catch(console.error)
+      if (!data.user?.must_change_password) {
+        useSystemNoticeStore.getState().fetch()
+      }
       return data as AuthResponse
     } catch (err: unknown) {
       const error = getApiErrorMessage(err, 'Verification failed')
@@ -133,6 +140,7 @@ export const useAuthStore = create<AuthState>()(
       })
       connect()
       tripSyncManager.syncAll().catch(console.error)
+      useSystemNoticeStore.getState().fetch()
       return data
     } catch (err: unknown) {
       const error = getApiErrorMessage(err, 'Registration failed')

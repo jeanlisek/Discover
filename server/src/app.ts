@@ -42,10 +42,13 @@ import shareRoutes from './routes/share';
 import journeyRoutes from './routes/journey';
 import journeyPublicRoutes from './routes/journeyPublic';
 import publicConfigRoutes from './routes/publicConfig';
+import systemNoticesRoutes from './routes/systemNotices';
 import { mcpHandler } from './mcp';
 import { Addon } from './types';
 import { getPhotoProviderConfig } from './services/memories/helpersService';
 import { getCollabFeatures } from './services/adminService';
+import { isAddonEnabled } from './services/adminService';
+import { ADDON_IDS } from './addons';
 
 export function createApp(): express.Application {
   const app = express();
@@ -267,13 +270,17 @@ export function createApp(): express.Application {
   // Addon routes
   app.use('/api/addons/vacay', vacayRoutes);
   app.use('/api/addons/atlas', atlasRoutes);
-  app.use('/api/journeys', journeyRoutes);
+  app.use('/api/journeys', (req, res, next) => {
+    if (!isAddonEnabled(ADDON_IDS.JOURNEY)) return res.status(404).json({ error: 'Journey addon is not enabled' });
+    next();
+  }, journeyRoutes);
   app.use('/api/public/journey', journeyPublicRoutes);
   app.use('/api/integrations/memories', memoriesRoutes);
   app.use('/api/photos', photoRoutes);
   app.use('/api/maps', mapsRoutes);
   app.use('/api/weather', weatherRoutes);
   app.use('/api/settings', settingsRoutes);
+  app.use('/api/system-notices', systemNoticesRoutes);
   app.use('/api/backup', backupRoutes);
   app.use('/api/notifications', notificationRoutes);
   app.use('/api', shareRoutes);

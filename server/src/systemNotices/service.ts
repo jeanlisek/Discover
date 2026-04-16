@@ -1,0 +1,59 @@
+import { db } from '../db/database.js';
+import { SYSTEM_NOTICES } from './registry.js';
+import { evaluate } from './conditions.js';
+import type { SystemNoticeDTO } from './types.js';
+
+function getCurrentAppVersion(): string {
+  return process.env.APP_VERSION || '0.0.0';
+}
+
+function severityWeight(s: string): number {
+  return s === 'critical' ? 2 : s === 'warn' ? 1 : 0;
+}
+
+export function getActiveNoticesFor(userId: number): SystemNoticeDTO[] {
+  const user = db.prepare(
+    'SELECT login_count, first_seen_version, role FROM users WHERE id = ?'
+  ).get(userId) as { login_count: number; first_seen_version: string; role: string } | undefined;
+
+  if (!user) return [];
+
+  const { count: tripCount } = db.prepare(
+    'SELECT COUNT(*) AS count FROM trips WHERE user_id = ?'
+  ).get(userId) as { count: number };
+
+  const dismissedIds = new Set<string>(
+    (db.prepare('SELECT notice_id FROM user_notice_dismissals WHERE user_id = ?')
+      .all(userId) as Array<{ notice_id: string }>)
+      .map(r => r.notice_id)
+  );
+
+  const now = new Date();
+  const currentAppVersion = getCurrentAppVersion();
+  const ctx = { user: { ...user, noTrips: tripCount }, currentAppVersion, now };
+
+  return SYSTEM_NOTICES
+    .filter(n => {
+      if (dismissedIds.has(n.id)) return false;
+      if (n.expiresAt && now > new Date(n.expiresAt)) return false;
+      return evaluate(n, ctx);
+    })
+    .sort((a, b) => {
+      const pw = (b.priority ?? 0) - (a.priority ?? 0);
+      if (pw !== 0) return pw;
+      const sw = severityWeight(b.severity) - severityWeight(a.severity);
+      if (sw !== 0) return sw;
+      return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+    })
+    .map(({ conditions: _c, publishedAt: _p, expiresAt: _e, priority: _pr, ...dto }) => dto);
+}
+
+export function dismissNotice(userId: number, noticeId: string): boolean {
+  const exists = SYSTEM_NOTICES.some(n => n.id === noticeId);
+  if (!exists) return false;
+  db.prepare(`
+    INSERT OR IGNORE INTO user_notice_dismissals (user_id, notice_id, dismissed_at)
+    VALUES (?, ?, ?)
+  `).run(userId, noticeId, Date.now());
+  return true;
+}
