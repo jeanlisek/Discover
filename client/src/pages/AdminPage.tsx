@@ -1180,6 +1180,7 @@ export default function AdminPage(): React.ReactElement {
             const emailActive = activeChans.includes('email')
             const webhookActive = activeChans.includes('webhook')
             const ntfyActive = activeChans.includes('ntfy')
+            const tripRemindersActive = smtpValues.notify_trip_reminder !== 'false'
 
             const setChannels = async (email: boolean, webhook: boolean, ntfy: boolean) => {
               const chans = [email && 'email', webhook && 'webhook', ntfy && 'ntfy'].filter(Boolean).join(',') || 'none'
@@ -1335,6 +1336,37 @@ export default function AdminPage(): React.ReactElement {
                       <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200"
                         style={{ transform: 'translateX(20px)' }} />
                     </div>
+                  </div>
+                </div>
+
+                {/* Trip Reminders Toggle */}
+                <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                  <div className="px-6 py-4 flex items-center justify-between">
+                    <div>
+                      <h2 className="font-semibold text-slate-900">{t('admin.notifications.tripReminders.title')}</h2>
+                      <p className="text-xs text-slate-400 mt-1">{t('admin.notifications.tripReminders.hint')}</p>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        const next = !tripRemindersActive
+                        setSmtpValues(prev => ({ ...prev, notify_trip_reminder: next ? 'true' : 'false' }))
+                        try {
+                          await authApi.updateAppSettings({ notify_trip_reminder: next ? 'true' : 'false' })
+                          toast.success(next ? t('admin.notifications.tripReminders.enabled') : t('admin.notifications.tripReminders.disabled'))
+                          authApi.getAppConfig().then((c: { trip_reminders_enabled?: boolean }) => {
+                            if (c?.trip_reminders_enabled !== undefined) setTripRemindersEnabled(c.trip_reminders_enabled)
+                          }).catch(() => {})
+                        } catch {
+                          setSmtpValues(prev => ({ ...prev, notify_trip_reminder: tripRemindersActive ? 'true' : 'false' }))
+                          toast.error(t('common.error'))
+                        }
+                      }}
+                      className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0"
+                      style={{ background: tripRemindersActive ? 'var(--text-primary)' : 'var(--border-primary)' }}
+                    >
+                      <span className="absolute left-0.5 h-5 w-5 rounded-full bg-white transition-transform duration-200"
+                        style={{ transform: tripRemindersActive ? 'translateX(20px)' : 'translateX(0)' }} />
+                    </button>
                   </div>
                 </div>
 

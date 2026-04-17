@@ -24,6 +24,7 @@ import MobileMapTimeline from '../components/Journey/MobileMapTimeline'
 import MobileEntryView from '../components/Journey/MobileEntryView'
 import { useIsMobile } from '../hooks/useIsMobile'
 import type { JourneyEntry, JourneyPhoto, JourneyDetail } from '../store/journeyStore'
+import { computeJourneyLifecycle } from '../utils/journeyLifecycle'
 
 const GRADIENTS = [
   'linear-gradient(135deg, #0F172A 0%, #6366F1 45%, #EC4899 100%)',
@@ -207,6 +208,14 @@ export default function JourneyDetailPage() {
   const dayGroups = groupByDate(timelineEntries)
   const sortedDates = [...dayGroups.keys()].sort()
 
+  const tripDateMin = current.trips.length
+    ? current.trips.reduce((min: string, t: any) => t.start_date && (!min || t.start_date < min) ? t.start_date : min, '')
+    : null
+  const tripDateMax = current.trips.length
+    ? current.trips.reduce((max: string, t: any) => t.end_date && (!max || t.end_date > max) ? t.end_date : max, '')
+    : null
+  const lifecycle = computeJourneyLifecycle(current.status, tripDateMin || null, tripDateMax || null)
+
   const showMobileCombined = isMobile && view === 'timeline'
 
   return (
@@ -283,16 +292,28 @@ export default function JourneyDetailPage() {
                 <div className="relative z-[3] flex items-center justify-between mb-5">
                   {/* Desktop: badges */}
                   <div className="hidden md:flex items-center gap-2">
-                    {current.status === 'active' && (
+                    {lifecycle === 'live' && (
                       <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-white/15 backdrop-blur rounded-full text-[10px] font-semibold uppercase">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Live
+                        {t('journey.frontpage.live')}
                       </div>
                     )}
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.12] backdrop-blur border border-white/15 rounded-full text-[11px] font-medium">
-                      <RefreshCw size={11} />
-                      {t('journey.detail.syncedWithTrips')}
-                    </div>
+                    {lifecycle !== 'archived' && current.trips.length > 0 && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.12] backdrop-blur border border-white/15 rounded-full text-[11px] font-medium">
+                        <RefreshCw size={11} />
+                        {t('journey.detail.syncedWithTrips')}
+                      </div>
+                    )}
+                    {lifecycle !== 'live' && lifecycle !== 'archived' && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.12] backdrop-blur border border-white/15 rounded-full text-[11px] font-medium">
+                        {t(`journey.status.${lifecycle === 'upcoming' ? 'upcoming' : lifecycle === 'draft' ? 'draft' : 'completed'}`)}
+                      </div>
+                    )}
+                    {lifecycle === 'archived' && (
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/[0.12] backdrop-blur border border-white/15 rounded-full text-[11px] font-medium">
+                        {t('journey.status.archived')}
+                      </div>
+                    )}
                   </div>
                   {/* Mobile: back button on the left */}
                   <button
@@ -331,7 +352,7 @@ export default function JourneyDetailPage() {
                   <div className="flex gap-8">
                     {[
                       { value: sortedDates.length, label: t('journey.stats.days') },
-                      { value: current.stats.cities, label: t('journey.stats.cities') },
+                      { value: current.stats.places, label: t('journey.stats.places') },
                       { value: current.stats.entries, label: t('journey.stats.entries') },
                       { value: current.stats.photos, label: t('journey.stats.photos') },
                     ].map(s => (
@@ -494,7 +515,7 @@ export default function JourneyDetailPage() {
                     { value: sortedDates.length, label: t('journey.stats.days') },
                     { value: current.stats.entries, label: t('journey.stats.entries') },
                     { value: current.stats.photos, label: t('journey.stats.photos') },
-                    { value: current.stats.cities, label: t('journey.stats.cities') },
+                    { value: current.stats.places, label: t('journey.stats.places') },
                   ].map(s => (
                     <div key={s.label} className="rounded-lg bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-700/50 px-3 py-2.5">
                       <div className="text-[18px] font-bold tracking-[-0.02em] text-zinc-900 dark:text-white leading-none mb-0.5">{s.value}</div>
@@ -2820,6 +2841,21 @@ function JourneySettingsDialog({ journey, onClose, onSaved, onOpenInvite }: {
   }
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [archiving, setArchiving] = useState(false)
+
+  const handleArchiveToggle = async () => {
+    setArchiving(true)
+    try {
+      const newStatus = journey.status === 'archived' ? 'active' : 'archived'
+      await updateJourney(journey.id, { status: newStatus })
+      toast.success(newStatus === 'archived' ? t('journey.settings.archived') : t('journey.settings.reopened'))
+      onSaved()
+    } catch {
+      toast.error(t('journey.settings.saveFailed'))
+    } finally {
+      setArchiving(false)
+    }
+  }
 
   const handleDelete = async () => {
     try {
@@ -2947,10 +2983,18 @@ function JourneySettingsDialog({ journey, onClose, onSaved, onOpenInvite }: {
         <div className="flex flex-wrap items-center gap-2 px-6 py-4 pb-6 md:pb-4 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="flex items-center gap-1.5 text-[12px] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg px-2.5 py-2 mr-auto"
+            className="flex items-center gap-1.5 text-[12px] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg px-2.5 py-2"
           >
             <Trash2 size={13} />
             {t('journey.settings.delete')}
+          </button>
+          <button
+            onClick={handleArchiveToggle}
+            disabled={archiving}
+            className="flex items-center gap-1.5 text-[12px] font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-lg px-2.5 py-2 mr-auto disabled:opacity-40"
+            title={t('journey.settings.endDescription')}
+          >
+            {journey.status === 'archived' ? t('journey.settings.reopenJourney') : t('journey.settings.endJourney')}
           </button>
           <button onClick={onClose} className="px-3.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-600 text-[13px] font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700">{t('common.cancel')}</button>
           <button onClick={handleSave} disabled={saving || !title.trim()} className="px-3.5 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-[13px] font-medium hover:bg-zinc-800 dark:hover:bg-zinc-100 disabled:opacity-40">

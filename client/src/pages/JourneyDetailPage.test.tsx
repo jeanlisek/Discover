@@ -176,7 +176,7 @@ const mockJourneyDetail = {
       avatar: null,
     },
   ],
-  stats: { entries: 2, photos: 1, cities: 2 },
+  stats: { entries: 2, photos: 1, places: 2 },
 };
 
 // ── MSW Handlers ─────────────────────────────────────────────────────────────
@@ -362,12 +362,12 @@ describe('JourneyDetailPage', () => {
       expect(screen.getAllByText('Days').length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText('Entries').length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText('Photos').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText('Cities').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Places').length).toBeGreaterThanOrEqual(1);
     });
 
     it('renders stat values', async () => {
       await renderAndWait();
-      // stats.entries = 2, stats.photos = 1, stats.cities = 2
+      // stats.entries = 2, stats.photos = 1, stats.places = 2
       // Entries count appears in hero and sidebar
       const twos = screen.getAllByText('2');
       expect(twos.length).toBeGreaterThanOrEqual(1);
@@ -474,7 +474,7 @@ describe('JourneyDetailPage', () => {
   // ── FE-PAGE-JOURNEYDETAIL-018 ──────────────────────────────────────────
   describe('FE-PAGE-JOURNEYDETAIL-018: Empty state when no entries', () => {
     it('shows "No entries yet" when journey has no entries', async () => {
-      setupDefaultHandlers({ entries: [], stats: { entries: 0, photos: 0, cities: 0 } });
+      setupDefaultHandlers({ entries: [], stats: { entries: 0, photos: 0, places: 0 } });
 
       render(<JourneyDetailPage />);
 
@@ -484,7 +484,7 @@ describe('JourneyDetailPage', () => {
     });
 
     it('shows hint text to add a trip', async () => {
-      setupDefaultHandlers({ entries: [], stats: { entries: 0, photos: 0, cities: 0 } });
+      setupDefaultHandlers({ entries: [], stats: { entries: 0, photos: 0, places: 0 } });
 
       render(<JourneyDetailPage />);
 
@@ -567,7 +567,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [multiPhotoEntry, mockJourneyDetail.entries[1]],
-        stats: { entries: 2, photos: 3, cities: 2 },
+        stats: { entries: 2, photos: 3, places: 2 },
       });
 
       render(<JourneyDetailPage />);
@@ -610,7 +610,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [...mockJourneyDetail.entries, skeletonEntry],
-        stats: { entries: 3, photos: 1, cities: 3 },
+        stats: { entries: 3, photos: 1, places: 3 },
       });
 
       render(<JourneyDetailPage />);
@@ -650,7 +650,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [...mockJourneyDetail.entries, checkinEntry],
-        stats: { entries: 3, photos: 1, cities: 2 },
+        stats: { entries: 3, photos: 1, places: 2 },
       });
 
       render(<JourneyDetailPage />);
@@ -707,15 +707,26 @@ describe('JourneyDetailPage', () => {
 
   // ── FE-PAGE-JOURNEYDETAIL-030 ──────────────────────────────────────────
   describe('FE-PAGE-JOURNEYDETAIL-030: Active status badge shows Live indicator', () => {
-    it('renders a "Live" badge for active journeys', async () => {
+    it('renders a "Live" badge when linked trip spans today', async () => {
+      setupDefaultHandlers({
+        trips: [{ trip_id: 5, added_at: now, title: 'Current Trip', start_date: '2020-01-01', end_date: '2099-12-31', cover_image: null, currency: 'EUR', place_count: 8 }],
+      });
       await renderAndWait();
       expect(screen.getByText('Live')).toBeInTheDocument();
+    });
+
+    it('does not render "Live" badge when linked trip is in the past', async () => {
+      await renderAndWait();
+      expect(screen.queryByText('Live')).not.toBeInTheDocument();
     });
   });
 
   // ── FE-PAGE-JOURNEYDETAIL-031 ──────────────────────────────────────────
   describe('FE-PAGE-JOURNEYDETAIL-031: Synced with Trips badge renders', () => {
-    it('renders the "Synced with Trips" text in the hero', async () => {
+    it('renders the "Synced with Trips" text in the hero for live journeys', async () => {
+      setupDefaultHandlers({
+        trips: [{ trip_id: 5, added_at: now, title: 'Current Trip', start_date: '2020-01-01', end_date: '2099-12-31', cover_image: null, currency: 'EUR', place_count: 8 }],
+      });
       await renderAndWait();
       expect(screen.getByText('Synced with Trips')).toBeInTheDocument();
     });
@@ -741,7 +752,7 @@ describe('JourneyDetailPage', () => {
     it('shows the place count in the sidebar map', async () => {
       await renderAndWait();
       // The sidebar map shows "N Places" text
-      expect(screen.getByText(/Places/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Places/).length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -1717,7 +1728,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [emptyEntry],
-        stats: { entries: 1, photos: 0, cities: 1 },
+        stats: { entries: 1, photos: 0, places: 1 },
       });
 
       render(<JourneyDetailPage />);
@@ -1930,7 +1941,7 @@ describe('JourneyDetailPage', () => {
         { ...mockJourneyDetail.entries[0], id: 10, entry_date: '2026-03-15' },
         { ...mockJourneyDetail.entries[1], id: 11, entry_date: '2026-03-15', location_lat: 41.95, location_lng: 12.55 },
       ];
-      setupDefaultHandlers({ entries: twoOnSameDay, stats: { entries: 2, photos: 1, cities: 2 } });
+      setupDefaultHandlers({ entries: twoOnSameDay, stats: { entries: 2, photos: 1, places: 2 } });
 
       render(<JourneyDetailPage />);
       await waitFor(() => {
@@ -2005,7 +2016,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [immichEntry, mockJourneyDetail.entries[1]],
-        stats: { entries: 2, photos: 1, cities: 2 },
+        stats: { entries: 2, photos: 1, places: 2 },
       });
 
       render(<JourneyDetailPage />);
@@ -2039,7 +2050,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [synologyEntry, mockJourneyDetail.entries[1]],
-        stats: { entries: 2, photos: 1, cities: 2 },
+        stats: { entries: 2, photos: 1, places: 2 },
       });
 
       render(<JourneyDetailPage />);
@@ -2636,7 +2647,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [multiPhotoEntry, mockJourneyDetail.entries[1]],
-        stats: { entries: 2, photos: 5, cities: 2 },
+        stats: { entries: 2, photos: 5, places: 2 },
       });
 
       render(<JourneyDetailPage />);
@@ -2661,7 +2672,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [twoPhotoEntry, mockJourneyDetail.entries[1]],
-        stats: { entries: 2, photos: 2, cities: 2 },
+        stats: { entries: 2, photos: 2, places: 2 },
       });
 
       render(<JourneyDetailPage />);
@@ -3045,7 +3056,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [mockJourneyDetail.entries[0], noLocEntry],
-        stats: { entries: 2, photos: 1, cities: 1 },
+        stats: { entries: 2, photos: 1, places: 1 },
       });
 
       render(<JourneyDetailPage />);
@@ -3528,7 +3539,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [entryWithMultiPhotos, mockJourneyDetail.entries[1]],
-        stats: { entries: 2, photos: 2, cities: 2 },
+        stats: { entries: 2, photos: 2, places: 2 },
       });
 
       server.use(
@@ -3620,7 +3631,7 @@ describe('JourneyDetailPage', () => {
       };
       setupDefaultHandlers({
         entries: [mockJourneyDetail.entries[0], noTitleEntry],
-        stats: { entries: 2, photos: 1, cities: 2 },
+        stats: { entries: 2, photos: 1, places: 2 },
       });
 
       render(<JourneyDetailPage />);

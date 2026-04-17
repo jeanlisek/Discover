@@ -166,14 +166,9 @@ function startTripReminders(): void {
     const reminderEnabled = getSetting('notify_trip_reminder') !== 'false';
     const channelsRaw = getSetting('notification_channels') || getSetting('notification_channel') || 'none';
     const activeChannels = channelsRaw === 'none' ? [] : channelsRaw.split(',').map((c: string) => c.trim());
-    const hasEmail = activeChannels.includes('email') && !!(getSetting('smtp_host') || '').trim();
-    const hasWebhook = activeChannels.includes('webhook');
-    const channelReady = hasEmail || hasWebhook;
-
-    if (!channelReady || !reminderEnabled) {
+    if (!reminderEnabled) {
       const { logInfo: li } = require('./services/auditLog');
-      const reason = !channelReady ? 'no notification channels configured' : 'trip reminders disabled in settings';
-      li(`Trip reminders: disabled (${reason})`);
+      li('Trip reminders: disabled in settings');
       return;
     }
 

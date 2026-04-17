@@ -31,6 +31,7 @@ const ADMIN_SETTINGS_KEYS = [
   'allow_registration', 'allowed_file_types', 'require_mfa',
   'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from', 'smtp_skip_tls_verify',
   'notification_channels', 'admin_webhook_url', 'admin_ntfy_server', 'admin_ntfy_topic', 'admin_ntfy_token',
+  'notify_trip_reminder',
   'password_login', 'password_registration', 'oidc_login', 'oidc_registration',
 ];
 
@@ -227,8 +228,7 @@ export function getAppConfig(authenticatedUser: { id: number } | null) {
   const notifChannelsRaw = (db.prepare("SELECT value FROM app_settings WHERE key = 'notification_channels'").get() as { value: string } | undefined)?.value || notifChannel;
   const activeChannels = notifChannelsRaw === 'none' ? [] : notifChannelsRaw.split(',').map((c: string) => c.trim()).filter(Boolean);
   const hasWebhookEnabled = activeChannels.includes('webhook');
-  const channelConfigured = (activeChannels.includes('email') && hasSmtpHost) || hasWebhookEnabled;
-  const tripRemindersEnabled = channelConfigured && tripReminderSetting !== 'false';
+  const tripRemindersEnabled = tripReminderSetting !== 'false';
   const setupComplete = userCount > 0 && !(db.prepare("SELECT id FROM users WHERE role = 'admin' AND must_change_password = 1 LIMIT 1").get());
 
   return {
