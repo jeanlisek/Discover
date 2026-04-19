@@ -112,6 +112,7 @@ export function createApp(): express.Application {
 
   if (shouldForceHttps) {
     app.use((req: Request, res: Response, next: NextFunction) => {
+      if (req.path === '/api/health') return next();
       if (req.secure || req.headers['x-forwarded-proto'] === 'https') return next();
       res.redirect(301, 'https://' + req.headers.host + req.url);
     });

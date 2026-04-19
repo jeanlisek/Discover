@@ -94,8 +94,22 @@ describe('Photo endpoint auth', () => {
 });
 
 describe('Force HTTPS redirect', () => {
-  it('MISC-004 — FORCE_HTTPS redirect sends 301 for HTTP requests', async () => {
+  it('MISC-004 — FORCE_HTTPS redirect sends 301 for HTTP requests on non-health paths', async () => {
     // createApp() reads FORCE_HTTPS at call time, so we need a fresh app instance
+    process.env.FORCE_HTTPS = 'true';
+    let httpsApp: Express;
+    try {
+      httpsApp = createApp();
+    } finally {
+      delete process.env.FORCE_HTTPS;
+    }
+    const res = await request(httpsApp)
+      .get('/api/addons')
+      .set('X-Forwarded-Proto', 'http');
+    expect(res.status).toBe(301);
+  });
+
+  it('MISC-008 — FORCE_HTTPS does not redirect /api/health (probes must reach it over HTTP)', async () => {
     process.env.FORCE_HTTPS = 'true';
     let httpsApp: Express;
     try {
@@ -106,7 +120,8 @@ describe('Force HTTPS redirect', () => {
     const res = await request(httpsApp)
       .get('/api/health')
       .set('X-Forwarded-Proto', 'http');
-    expect(res.status).toBe(301);
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('ok');
   });
 
   it('MISC-004 — no redirect when FORCE_HTTPS is not set', async () => {
