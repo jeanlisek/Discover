@@ -134,6 +134,35 @@ describe('applyIdempotency', () => {
     expect(rows['fail-key:3:POST:/api/test']).toBeUndefined();
   });
 
+  it('returns 400 when X-Idempotency-Key exceeds 128 characters', () => {
+    const longKey = 'a'.repeat(129);
+    const req = makeReq('POST', { 'x-idempotency-key': longKey });
+    const res = makeRes();
+    const next = vi.fn();
+    applyIdempotency(req, res, next, 1);
+    expect(next).not.toHaveBeenCalled();
+    expect(res.json as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.stringContaining('128') }),
+    );
+  });
+
+  it('does NOT cache response body exceeding 256 KiB', () => {
+    const req = makeReq('POST', { 'x-idempotency-key': 'big-key' });
+    const res = makeRes(200);
+    const originalJsonSpy = res.json as ReturnType<typeof vi.fn>;
+    const largePayload = { data: 'x'.repeat(256 * 1024 + 1) };
+    const next = vi.fn(() => {
+      // res.json is now the wrapper; calling it exercises the size-cap branch
+      res.json(largePayload);
+    });
+    applyIdempotency(req, res, next, 5);
+    expect(next).toHaveBeenCalledOnce();
+    // Underlying spy was called (response reached the client)
+    expect(originalJsonSpy).toHaveBeenCalledWith(largePayload);
+    // But NOT stored in the idempotency store
+    expect(rows['big-key:5:POST:/api/test']).toBeUndefined();
+  });
+
   it('handles PUT, PATCH, and DELETE the same as POST', () => {
     for (const method of ['PUT', 'PATCH', 'DELETE'] as const) {
       const req = makeReq(method, { 'x-idempotency-key': `key-${method}` });

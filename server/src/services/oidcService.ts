@@ -140,6 +140,12 @@ export async function discover(issuer: string, discoveryUrl?: string | null): Pr
   const res = await fetch(url);
   if (!res.ok) throw new Error('Failed to fetch OIDC discovery document');
   const doc = (await res.json()) as OidcDiscoveryDoc;
+  // Validate that the discovery doc's issuer matches the operator-configured
+  // one. A MITM or compromised doc could otherwise supply a crafted issuer
+  // that passes jwt.verify() because we used doc.issuer as the expected value.
+  if (doc.issuer && doc.issuer !== issuer) {
+    throw new Error(`OIDC discovery issuer mismatch: expected "${issuer}", got "${doc.issuer}"`);
+  }
   doc._issuer = url;
   discoveryCache = doc;
   discoveryCacheTime = Date.now();

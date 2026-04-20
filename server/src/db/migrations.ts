@@ -1867,6 +1867,15 @@ function runMigrations(db: Database.Database): void {
         CREATE INDEX IF NOT EXISTS idx_idempotency_keys_created ON idempotency_keys(created_at);
       `);
     },
+    // SEC-H6: revoke all OAuth tokens issued before audience binding was
+    // enforced. mcp/index.ts now unconditionally checks audience; tokens
+    // with audience=null would be permanently rejected by the check, so
+    // removing them here avoids leaving dead rows and makes the intent clear.
+    () => {
+      const hasCol = db.prepare("SELECT name FROM pragma_table_info('oauth_tokens') WHERE name = 'audience'").get();
+      if (!hasCol) return;
+      db.prepare('DELETE FROM oauth_tokens WHERE audience IS NULL').run();
+    },
   ];
 
   if (currentVersion < migrations.length) {
