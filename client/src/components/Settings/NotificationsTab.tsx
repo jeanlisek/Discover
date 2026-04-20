@@ -25,6 +25,7 @@ const EVENT_LABEL_KEYS: Record<string, string> = {
   trip_invite: 'settings.notifyTripInvite',
   booking_change: 'settings.notifyBookingChange',
   trip_reminder: 'settings.notifyTripReminder',
+  todo_due: 'settings.notifyTodoDue',
   vacay_invite: 'settings.notifyVacayInvite',
   photos_shared: 'settings.notifyPhotosShared',
   collab_message: 'settings.notifyCollabMessage',

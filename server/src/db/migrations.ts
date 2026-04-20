@@ -1792,6 +1792,13 @@ function runMigrations(db: Database.Database): void {
         CREATE INDEX IF NOT EXISTS idx_prt_hash ON password_reset_tokens(token_hash);
       `);
     },
+    // Migration: todo due-date reminders — track when we last sent a
+    // reminder for each todo so we don't spam the same notification
+    // every day the scheduler runs.
+    () => {
+      try { db.exec('ALTER TABLE todo_items ADD COLUMN reminded_at DATETIME'); }
+      catch (err: any) { if (!err.message?.includes('duplicate column name')) throw err; }
+    },
   ];
 
   if (currentVersion < migrations.length) {

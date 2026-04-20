@@ -207,6 +207,81 @@ function startTripReminders(): void {
   }, { timezone: tz });
 }
 
+// Todo due-date reminders: daily check at 9 AM for unchecked todos
+// whose due_date falls within the next TODO_REMINDER_LEAD_DAYS days.
+// Each todo gets reminded at most once per 24 h (tracked via
+// todo_items.reminded_at) so the scheduler doesn't spam the user every
+// morning leading up to the deadline.
+const TODO_REMINDER_LEAD_DAYS = 3;
+let todoReminderTask: ScheduledTask | null = null;
+
+function startTodoReminders(): void {
+  if (todoReminderTask) { todoReminderTask.stop(); todoReminderTask = null; }
+
+  const { db } = require('./db/database');
+  const getSetting = (key: string) => (db.prepare('SELECT value FROM app_settings WHERE key = ?').get(key) as { value: string } | undefined)?.value;
+  const enabled = getSetting('notify_todo_due') !== 'false';
+  if (!enabled) {
+    const { logInfo: li } = require('./services/auditLog');
+    li('Todo due reminders: disabled in settings');
+    return;
+  }
+  const { logInfo: liSetup } = require('./services/auditLog');
+  liSetup(`Todo due reminders: enabled (lead ${TODO_REMINDER_LEAD_DAYS}d)`);
+
+  const tz = process.env.TZ || 'UTC';
+  todoReminderTask = cron.schedule('0 9 * * *', async () => {
+    try {
+      const { send } = require('./services/notificationService');
+
+      // Select unchecked todos with a due date inside the lead window
+      // that haven't been reminded in the last 24 hours. `due_date` is
+      // stored as a YYYY-MM-DD text; SQLite date() handles it directly.
+      const todos = db.prepare(`
+        SELECT ti.id, ti.trip_id, ti.name, ti.due_date, ti.assigned_user_id,
+               t.title AS trip_title, t.user_id AS trip_owner_id
+        FROM todo_items ti
+        JOIN trips t ON t.id = ti.trip_id
+        WHERE ti.checked = 0
+          AND ti.due_date IS NOT NULL
+          AND ti.due_date <> ''
+          AND date(ti.due_date) <= date('now', '+' || ? || ' days')
+          AND date(ti.due_date) >= date('now')
+          AND (ti.reminded_at IS NULL OR ti.reminded_at <= datetime('now', '-20 hours'))
+      `).all(TODO_REMINDER_LEAD_DAYS) as {
+        id: number; trip_id: number; name: string; due_date: string;
+        assigned_user_id: number | null; trip_title: string; trip_owner_id: number;
+      }[];
+
+      for (const todo of todos) {
+        const targetScope: 'user' | 'trip' = todo.assigned_user_id ? 'user' : 'trip';
+        const targetId = todo.assigned_user_id ?? todo.trip_id;
+        await send({
+          event: 'todo_due',
+          actorId: null,
+          scope: targetScope,
+          targetId,
+          params: {
+            todo: todo.name,
+            trip: todo.trip_title,
+            tripId: String(todo.trip_id),
+            due: todo.due_date,
+          },
+        }).catch(() => {});
+        db.prepare('UPDATE todo_items SET reminded_at = CURRENT_TIMESTAMP WHERE id = ?').run(todo.id);
+      }
+
+      const { logInfo: li } = require('./services/auditLog');
+      if (todos.length > 0) {
+        li(`Todo reminders sent for ${todos.length} item(s)`);
+      }
+    } catch (err: unknown) {
+      const { logError: le } = require('./services/auditLog');
+      le(`Todo reminder check failed: ${err instanceof Error ? err.message : err}`);
+    }
+  }, { timezone: tz });
+}
+
 // Version check: daily at 9 AM — notify admins if a new TREK release is available
 let versionCheckTask: ScheduledTask | null = null;
 
@@ -280,4 +355,4 @@ function stop(): void {
   if (trekPhotoCacheTask) { trekPhotoCacheTask.stop(); trekPhotoCacheTask = null; }
 }
 
-export { start, stop, startDemoReset, startTripReminders, startVersionCheck, startIdempotencyCleanup, startTrekPhotoCacheCleanup, loadSettings, saveSettings, VALID_INTERVALS };
+export { start, stop, startDemoReset, startTripReminders, startTodoReminders, startVersionCheck, startIdempotencyCleanup, startTrekPhotoCacheCleanup, loadSettings, saveSettings, VALID_INTERVALS };
