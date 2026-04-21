@@ -627,7 +627,9 @@ export async function fetchSynologyThumbnailBytes(
         mode: 'download',
         id: parsedId.id,
         type: 'unit',
-        size: 'sm',
+        // Match the uncached streamSynologyAsset default — 'sm' (240px) looked
+        // pixelated on retina.
+        size: 'm',
         cache_key: parsedId.cacheKey,
         _sid: sid.data,
     });
