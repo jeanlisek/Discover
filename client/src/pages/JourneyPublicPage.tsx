@@ -219,7 +219,7 @@ export default function JourneyPublicPage() {
         {/* Mobile combined map+timeline (public, read-only) */}
         {isMobile && view === 'timeline' && perms.share_timeline && perms.share_map && (
           <MobileMapTimeline
-            entries={entries}
+            entries={timelineEntries}
             mapEntries={mapEntries.map(e => ({ id: String(e.id), lat: e.location_lat!, lng: e.location_lng!, title: e.title, mood: e.mood, entry_date: e.entry_date }))}
             dark={document.documentElement.classList.contains('dark')}
             readOnly
