@@ -1,9 +1,9 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo-trek-light.gif" />
-  <source media="(prefers-color-scheme: light)" srcset="docs/logo-trek-dark.gif" />
-  <img src="docs/logo-trek-dark.gif" alt="TREK" height="96" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo-discover-light.gif" />
+  <source media="(prefers-color-scheme: light)" srcset="docs/logo-discover-dark.gif" />
+  <img src="docs/logo-discover-dark.gif" alt="Discover" height="96" />
 </picture>
 
 <br />
@@ -41,7 +41,7 @@ A self-hosted, real-time collaborative travel planner — with maps, budgets, pa
 
 <div align="center">
 
-<img src="https://github.com/mauriceboe/trek-media/releases/download/readme-assets/TREK1.gif" alt="TREK — 60-second tour" width="100%" />
+<img src="https://github.com/mauriceboe/trek-media/releases/download/readme-assets/Discover1.gif" alt="Discover — 60-second tour" width="100%" />
 
 </div>
 
@@ -64,7 +64,7 @@ A self-hosted, real-time collaborative travel planner — with maps, budgets, pa
 
 <picture>
   <source media="(max-width: 700px)" srcset="docs/tiles/grid-mobile.svg" />
-  <img src="docs/tiles/grid-desktop.svg" alt="TREK feature tiles" width="100%" />
+  <img src="docs/tiles/grid-desktop.svg" alt="Discover feature tiles" width="100%" />
 </picture>
 
 <details>
@@ -135,7 +135,7 @@ A self-hosted, real-time collaborative travel planner — with maps, budgets, pa
 - **Atlas** — world map of visited countries, bucket list, travel stats, streak tracking, liquid-glass UI
 - **Journey** — magazine-style travel journal with entries, photos (Immich/Synology), maps, moods
 - **Naver List Import** — one-click import from shared Naver Maps lists
-- **MCP** — expose TREK to AI assistants via OAuth 2.1
+- **MCP** — expose Discover to AI assistants via OAuth 2.1
 
 </td>
 <td width="50%" valign="top">
@@ -176,7 +176,7 @@ ENCRYPTION_KEY=$(openssl rand -hex 32) docker run -d -p 3000:3000 \
   -v ./data:/app/data -v ./uploads:/app/uploads mauriceboe/trek
 ```
 
-Open `http://localhost:3000`. On first boot TREK seeds an admin account — if you set `ADMIN_EMAIL`/`ADMIN_PASSWORD` those are used, otherwise the credentials are printed to the container log (`docker logs trek`).
+Open `http://localhost:3000`. On first boot Discover seeds an admin account — if you set `ADMIN_EMAIL`/`ADMIN_PASSWORD` those are used, otherwise the credentials are printed to the container log (`docker logs trek`).
 
 <div align="center">
 
@@ -272,7 +272,7 @@ docker compose up -d
 <h2 id="helm-kubernetes">Helm (Kubernetes)</h2>
 
 ```bash
-helm repo add trek https://mauriceboe.github.io/TREK
+helm repo add trek https://mauriceboe.github.io/Discover
 helm repo update
 helm install trek trek/trek
 ```
@@ -281,13 +281,13 @@ See [`charts/README.md`](https://github.com/mauriceboe/TREK/blob/main/charts/REA
 
 <h2 id="install-as-app-pwa">Install as App (PWA)</h2>
 
-TREK works as a Progressive Web App — no App Store needed.
+Discover works as a Progressive Web App — no App Store needed.
 
-1. Open TREK in the browser (HTTPS required)
+1. Open Discover in the browser (HTTPS required)
 2. **iOS**: Share ▸ *Add to Home Screen*
 3. **Android**: Menu ▸ *Install app* (or *Add to Home Screen*)
 
-TREK then launches fullscreen with its own icon, just like a native app.
+Discover then launches fullscreen with its own icon, just like a native app.
 
 <br />
 
@@ -323,7 +323,7 @@ The script creates a timestamped DB backup before making changes and prompts for
 
 <h2 id="reverse-proxy">Reverse Proxy</h2>
 
-For production, put TREK behind a TLS-terminating reverse proxy. TREK uses WebSockets for real-time sync, so the proxy **must** support WebSocket upgrades on `/ws`.
+For production, put Discover behind a TLS-terminating reverse proxy. Discover uses WebSockets for real-time sync, so the proxy **must** support WebSocket upgrades on `/ws`.
 
 <details>
 <summary>Nginx</summary>
@@ -439,5 +439,5 @@ Caddy handles TLS and WebSockets automatically.
 
 ## License
 
-TREK is [AGPL v3](LICENSE). Self-host freely for personal or internal company use. If you modify and offer TREK as a network service to third parties, your modifications must be open-sourced under the same licence.
+Discover is [AGPL v3](LICENSE). Self-host freely for personal or internal company use. If you modify and offer Discover as a network service to third parties, your modifications must be open-sourced under the same licence.
 

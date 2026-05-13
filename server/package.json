@@ -1,5 +1,5 @@
 {
-  "name": "trek-server",
+  "name": "discover-server",
   "version": "3.0.20",
   "main": "src/index.ts",
   "scripts": {

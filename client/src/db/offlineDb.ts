@@ -48,7 +48,7 @@ export interface BlobCacheEntry {
 
 // ── Dexie class ────────────────────────────────────────────────────────────────
 
-class TrekOfflineDb extends Dexie {
+class DiscoverOfflineDb extends Dexie {
   trips!: Table<Trip, number>;
   days!: Table<Day, number>;
   places!: Table<Place, number>;
@@ -91,7 +91,7 @@ class TrekOfflineDb extends Dexie {
   }
 }
 
-export const offlineDb = new TrekOfflineDb();
+export const offlineDb = new DiscoverOfflineDb();
 
 // ── Bulk upsert helpers ────────────────────────────────────────────────────────
 

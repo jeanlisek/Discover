@@ -34,7 +34,7 @@ const onListen = () => {
   const resolvedAppUrl = getMcpSafeUrl();
   const banner = [
     '──────────────────────────────────────',
-    '  TREK API started',
+    '  Discover API started',
     `  Version         ${APP_VERSION}`,
     ...(HOST ? [`  Host:           ${HOST}`] : []),
     `  Container Port: ${PORT}`,
@@ -43,7 +43,7 @@ const onListen = () => {
     `  Timezone:       ${tz}`,
     `  Origins:        ${origins}`,
     `  Log level:      ${LOG_LVL}`,
-    `  Log file:       /app/data/logs/trek.log`,
+    `  Log file:       /app/data/logs/discover.log`,
     `  PID:            ${process.pid}`,
     `  User:           uid=${process.getuid?.()} gid=${process.getgid?.()}`,
     '──────────────────────────────────────',
@@ -76,7 +76,7 @@ const onListen = () => {
   scheduler.startVersionCheck();
   scheduler.startDemoReset();
   scheduler.startIdempotencyCleanup();
-  scheduler.startTrekPhotoCacheCleanup();
+  scheduler.startDiscoverPhotoCacheCleanup();
   const { startTokenCleanup } = require('./services/ephemeralTokens');
   startTokenCleanup();
   import('./websocket').then(({ setupWebSocket }) => {

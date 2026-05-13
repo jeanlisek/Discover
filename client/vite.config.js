@@ -68,9 +68,9 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'TREK \u2014 Travel Planner',
-        short_name: 'TREK',
-        description: 'Travel Resource & Exploration Kit',
+        name: 'Discover \u2014 Travel Planner',
+        short_name: 'Discover',
+        description: 'Plan, track and remember your trips',
         theme_color: '#111827',
         background_color: '#0f172a',
         display: 'standalone',

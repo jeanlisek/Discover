@@ -313,20 +313,20 @@ function startIdempotencyCleanup(): void {
 }
 
 // Trek photo cache cleanup: every 2 hours — evict disk files and DB rows past their 1h TTL
-let trekPhotoCacheTask: ScheduledTask | null = null;
+let discoverPhotoCacheTask: ScheduledTask | null = null;
 
-function startTrekPhotoCacheCleanup(): void {
-  if (trekPhotoCacheTask) { trekPhotoCacheTask.stop(); trekPhotoCacheTask = null; }
+function startDiscoverPhotoCacheCleanup(): void {
+  if (discoverPhotoCacheTask) { discoverPhotoCacheTask.stop(); discoverPhotoCacheTask = null; }
 
   // Run once immediately on startup to evict any entries left over from a previous run
   try {
-    const { sweepExpired } = require('./services/memories/trekPhotoCache');
+    const { sweepExpired } = require('./services/memories/discoverPhotoCache');
     sweepExpired();
   } catch { /* cache dir may not exist yet — harmless */ }
 
-  trekPhotoCacheTask = cron.schedule('0 */2 * * *', () => {
+  discoverPhotoCacheTask = cron.schedule('0 */2 * * *', () => {
     try {
-      const { sweepExpired } = require('./services/memories/trekPhotoCache');
+      const { sweepExpired } = require('./services/memories/discoverPhotoCache');
       sweepExpired();
     } catch (err: unknown) {
       logError(`Trek photo cache cleanup: ${err instanceof Error ? err.message : err}`);
@@ -340,7 +340,7 @@ function stop(): void {
   if (reminderTask) { reminderTask.stop(); reminderTask = null; }
   if (versionCheckTask) { versionCheckTask.stop(); versionCheckTask = null; }
   if (idempotencyCleanupTask) { idempotencyCleanupTask.stop(); idempotencyCleanupTask = null; }
-  if (trekPhotoCacheTask) { trekPhotoCacheTask.stop(); trekPhotoCacheTask = null; }
+  if (discoverPhotoCacheTask) { discoverPhotoCacheTask.stop(); discoverPhotoCacheTask = null; }
 }
 
-export { start, stop, startDemoReset, startTripReminders, startTodoReminders, startVersionCheck, startIdempotencyCleanup, startTrekPhotoCacheCleanup, loadSettings, saveSettings, VALID_INTERVALS };
+export { start, stop, startDemoReset, startTripReminders, startTodoReminders, startVersionCheck, startIdempotencyCleanup, startDiscoverPhotoCacheCleanup, loadSettings, saveSettings, VALID_INTERVALS };

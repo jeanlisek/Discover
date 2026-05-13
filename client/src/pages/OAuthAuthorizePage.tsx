@@ -179,7 +179,7 @@ export default function OAuthAuthorizePage(): React.ReactElement {
               <Lock className="w-10 h-10 mx-auto" style={{ color: 'var(--accent-primary, #4f46e5)' }} />
               <h1 className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>Sign in to continue</h1>
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <strong>{validation?.client?.name || clientId}</strong> wants access to your TREK account. Please sign in first.
+                <strong>{validation?.client?.name || clientId}</strong> wants access to your Discover account. Please sign in first.
               </p>
             </div>
             <button
@@ -187,7 +187,7 @@ export default function OAuthAuthorizePage(): React.ReactElement {
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white"
                 style={{ background: 'var(--accent-primary, #4f46e5)' }}>
               <LogIn className="w-4 h-4" />
-              Sign in to TREK
+              Sign in to Discover
             </button>
           </div>
         </div>
@@ -211,7 +211,7 @@ export default function OAuthAuthorizePage(): React.ReactElement {
                   {validation?.client?.name || clientId}
                 </h1>
                 <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
-                  This application is requesting access to your TREK account.
+                  This application is requesting access to your Discover account.
                 </p>
               </div>
             </div>

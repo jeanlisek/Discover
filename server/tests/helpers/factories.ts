@@ -558,12 +558,12 @@ export function addTripPhoto(
   provider: string,
   opts: { shared?: boolean; albumLinkId?: number } = {}
 ): TestTripPhoto {
-  // Insert into trek_photos first (central registry)
+  // Insert into discover_photos first (central registry)
   db.prepare(
-    'INSERT OR IGNORE INTO trek_photos (provider, asset_id, owner_id) VALUES (?, ?, ?)'
+    'INSERT OR IGNORE INTO discover_photos (provider, asset_id, owner_id) VALUES (?, ?, ?)'
   ).run(provider, assetId, userId);
   const trekPhoto = db.prepare(
-    'SELECT id FROM trek_photos WHERE provider = ? AND asset_id = ? AND owner_id = ?'
+    'SELECT id FROM discover_photos WHERE provider = ? AND asset_id = ? AND owner_id = ?'
   ).get(provider, assetId, userId) as { id: number };
 
   const result = db.prepare(
@@ -572,7 +572,7 @@ export function addTripPhoto(
   return db.prepare(`
     SELECT tp.id, tp.trip_id, tp.user_id, tkp.asset_id, tkp.provider, tp.shared, tp.album_link_id
     FROM trip_photos tp
-    JOIN trek_photos tkp ON tkp.id = tp.photo_id
+    JOIN discover_photos tkp ON tkp.id = tp.photo_id
     WHERE tp.id = ?
   `).get(result.lastInsertRowid) as TestTripPhoto;
 }

@@ -79,7 +79,7 @@ afterAll(() => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('Login', () => {
-  it('AUTH-001 — successful login returns 200, user object, and trek_session cookie', async () => {
+  it('AUTH-001 — successful login returns 200, user object, and discover_session cookie', async () => {
     const { user, password } = createUser(testDb);
     const res = await request(app).post('/api/auth/login').send({ email: user.email, password });
     expect(res.status).toBe(200);
@@ -89,7 +89,7 @@ describe('Login', () => {
     const cookies: string[] = Array.isArray(res.headers['set-cookie'])
       ? res.headers['set-cookie']
       : [res.headers['set-cookie']];
-    expect(cookies.some((c: string) => c.includes('trek_session'))).toBe(true);
+    expect(cookies.some((c: string) => c.includes('discover_session'))).toBe(true);
   });
 
   it('AUTH-002 — wrong password returns 401 with generic message', async () => {
@@ -112,7 +112,7 @@ describe('Login', () => {
     const cookies: string[] = Array.isArray(res.headers['set-cookie'])
       ? res.headers['set-cookie']
       : (res.headers['set-cookie'] ? [res.headers['set-cookie']] : []);
-    const sessionCookie = cookies.find((c: string) => c.includes('trek_session'));
+    const sessionCookie = cookies.find((c: string) => c.includes('discover_session'));
     expect(sessionCookie).toBeDefined();
     expect(sessionCookie).toMatch(/expires=Thu, 01 Jan 1970|Max-Age=0/i);
   });
@@ -134,7 +134,7 @@ describe('Registration', () => {
     const cookies: string[] = Array.isArray(res.headers['set-cookie'])
       ? res.headers['set-cookie']
       : [res.headers['set-cookie']];
-    expect(cookies.some((c: string) => c.includes('trek_session'))).toBe(true);
+    expect(cookies.some((c: string) => c.includes('discover_session'))).toBe(true);
   });
 
   it('AUTH-006 — registration with weak password is rejected', async () => {
@@ -406,7 +406,7 @@ describe('MFA', () => {
     const cookies: string[] = Array.isArray(verifyRes.headers['set-cookie'])
       ? verifyRes.headers['set-cookie']
       : [verifyRes.headers['set-cookie']];
-    expect(cookies.some((c: string) => c.includes('trek_session'))).toBe(true);
+    expect(cookies.some((c: string) => c.includes('discover_session'))).toBe(true);
   });
 
   it('AUTH-017 — verify-login with invalid TOTP code returns 401', async () => {
@@ -613,9 +613,9 @@ describe('Account deletion', () => {
       "INSERT INTO trip_files (trip_id, filename, original_name, uploaded_by) VALUES (?, 'f.pdf', 'file.pdf', ?)"
     ).run(otherTrip.id, target.id);
 
-    // trek_photos.owner_id (SET NULL): target owns a photo in the central registry
+    // discover_photos.owner_id (SET NULL): target owns a photo in the central registry
     const trekPhotoRow = testDb.prepare(
-      "INSERT INTO trek_photos (provider, asset_id, owner_id) VALUES ('immich', 'asset-auth-test', ?)"
+      "INSERT INTO discover_photos (provider, asset_id, owner_id) VALUES ('immich', 'asset-auth-test', ?)"
     ).run(target.id);
 
     // trip_photos.user_id (CASCADE): target added a photo to otherUser's trip
@@ -729,8 +729,8 @@ describe('Account deletion', () => {
     expect(testDb.prepare('SELECT id FROM journey_entries WHERE journey_id = ?').get(ownedJourney.id)).toBeUndefined();
     // uploaded file survives but uploaded_by is now NULL
     expect((testDb.prepare('SELECT uploaded_by FROM trip_files WHERE id = ?').get(fileRow.lastInsertRowid) as any).uploaded_by).toBeNull();
-    // trek_photos row survives but owner_id is now NULL
-    expect((testDb.prepare('SELECT owner_id FROM trek_photos WHERE id = ?').get(trekPhotoRow.lastInsertRowid) as any).owner_id).toBeNull();
+    // discover_photos row survives but owner_id is now NULL
+    expect((testDb.prepare('SELECT owner_id FROM discover_photos WHERE id = ?').get(trekPhotoRow.lastInsertRowid) as any).owner_id).toBeNull();
     // trip_photos row for target is cascade-deleted
     expect(testDb.prepare("SELECT id FROM trip_photos WHERE trip_id = ? AND user_id = ?").get(otherTrip.id, target.id)).toBeUndefined();
     // owned trip is cascade-deleted

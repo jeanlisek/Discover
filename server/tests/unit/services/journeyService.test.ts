@@ -1211,7 +1211,7 @@ describe('setPhotoProvider', () => {
 
     const updated = testDb.prepare(`
       SELECT jp.*, tkp.provider, tkp.asset_id, tkp.owner_id
-      FROM journey_photos jp JOIN trek_photos tkp ON tkp.id = jp.photo_id
+      FROM journey_photos jp JOIN discover_photos tkp ON tkp.id = jp.photo_id
       WHERE jp.id = ?
     `).get(photo!.id) as any;
     expect(updated.provider).toBe('immich');
@@ -1400,7 +1400,7 @@ describe('Edge cases', () => {
     // Trip photos now go straight into the journey gallery (no wrapper entry).
     const photos = testDb.prepare(`
       SELECT jp.*, tkp.asset_id FROM journey_photos jp
-      JOIN trek_photos tkp ON tkp.id = jp.photo_id
+      JOIN discover_photos tkp ON tkp.id = jp.photo_id
       WHERE jp.journey_id = ?
     `).all(journey.id);
     expect(photos.length).toBe(1);
@@ -1449,7 +1449,7 @@ describe('Edge cases', () => {
 // -- Passphrase on addProviderPhoto -------------------------------------------
 
 describe('addProviderPhoto — passphrase', () => {
-  it('JOURNEY-SVC-088: addProviderPhoto with passphrase stores encrypted value on trek_photos', () => {
+  it('JOURNEY-SVC-088: addProviderPhoto with passphrase stores encrypted value on discover_photos', () => {
     const { user } = createUser(testDb);
     const journey = createJourney(testDb, user.id);
     const entry = createJourneyEntry(testDb, journey.id, user.id, { entry_date: '2026-03-15' });
@@ -1458,7 +1458,7 @@ describe('addProviderPhoto — passphrase', () => {
 
     expect(photo).not.toBeNull();
 
-    const row = testDb.prepare('SELECT passphrase FROM trek_photos WHERE provider = ? AND asset_id = ? AND owner_id = ?')
+    const row = testDb.prepare('SELECT passphrase FROM discover_photos WHERE provider = ? AND asset_id = ? AND owner_id = ?')
       .get('synologyphotos', 'pp-asset-1', user.id) as { passphrase: string | null } | undefined;
     expect(row?.passphrase).not.toBeNull();
     expect(typeof row?.passphrase).toBe('string');

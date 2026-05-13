@@ -1,6 +1,6 @@
 # Environment Variables
 
-Complete reference for all environment variables TREK reads.
+Complete reference for all environment variables Discover reads.
 
 ## How to Set Variables
 
@@ -28,9 +28,9 @@ Complete reference for all environment variables TREK reads.
 
 ### `HOST` — Source and Proxmox installs only
 
-By default TREK binds to all network interfaces (`0.0.0.0`), which is the correct behaviour inside a container because Docker handles port exposure at the host level. Setting `HOST` overrides the bind address at the Node.js level.
+By default Discover binds to all network interfaces (`0.0.0.0`), which is the correct behaviour inside a container because Docker handles port exposure at the host level. Setting `HOST` overrides the bind address at the Node.js level.
 
-**When to use it:** only when running TREK directly on a host (git sources or the [Proxmox community script](Install-Proxmox)) and you need to restrict which interface the server listens on — for example, to expose TREK only on a LAN interface while keeping it off the public-facing one.
+**When to use it:** only when running Discover directly on a host (git sources or the [Proxmox community script](Install-Proxmox)) and you need to restrict which interface the server listens on — for example, to expose Discover only on a LAN interface while keeping it off the public-facing one.
 
 **Never set `HOST` in Docker, Docker Compose, Helm, or Unraid deployments.** Use Docker's `-p <host-ip>:<host-port>:<container-port>` syntax or your orchestrator's port binding instead.
 
@@ -106,7 +106,7 @@ SMTP settings can be configured via the Admin panel or overridden with environme
 | `SMTP_PORT` | SMTP server port. Port `465` enables implicit TLS (`secure: true`); all other ports use STARTTLS or plain. | — |
 | `SMTP_USER` | SMTP authentication username | — |
 | `SMTP_PASS` | SMTP authentication password | — |
-| `SMTP_FROM` | Sender address for outbound emails (e.g. `TREK <noreply@example.com>`) | — |
+| `SMTP_FROM` | Sender address for outbound emails (e.g. `Discover <noreply@example.com>`) | — |
 | `SMTP_SKIP_TLS_VERIFY` | Set `true` to disable TLS certificate validation. Useful for self-signed certs on internal SMTP relays — not recommended in production. | `false` |
 
 `SMTP_HOST`, `SMTP_PORT`, and `SMTP_FROM` are all required for email delivery to work. `SMTP_USER` and `SMTP_PASS` are optional (for unauthenticated relays).

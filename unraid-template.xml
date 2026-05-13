@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Container version="2">
-  <Name>TREK</Name>
+  <Name>Discover</Name>
   <Repository>mauriceboe/trek</Repository>
   <Registry>https://hub.docker.com/r/mauriceboe/trek</Registry>
   <Branch>
@@ -11,14 +11,14 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/mauriceboe/TREK/issues</Support>
   <Project>https://github.com/mauriceboe/TREK</Project>
-  <Overview>TREK is a self-hosted, real-time collaborative travel planner with interactive maps, budgets, bookings, packing lists, file management, and more. Plan trips together with your group — changes sync instantly across all connected users. Includes OIDC/SSO support, dark mode, PWA, and a modular addon system (Vacay, Atlas, Collab, Budget, Packing).</Overview>
+  <Overview>Discover is a self-hosted, real-time collaborative travel planner with interactive maps, budgets, bookings, packing lists, file management, and more. Plan trips together with your group — changes sync instantly across all connected users. Includes OIDC/SSO support, dark mode, PWA, and a modular addon system (Vacay, Atlas, Collab, Budget, Packing).</Overview>
   <Category>Productivity: Tools:</Category>
   <WebUI>http://[IP]:[PORT:3000]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/mauriceboe/TREK/main/unraid-template.xml</TemplateURL>
   <Icon>https://raw.githubusercontent.com/mauriceboe/TREK/main/client/public/icons/icon-dark.svg</Icon>
   <ExtraParams/>
   <PostArgs/>
-  <DonateText>Support TREK development</DonateText>
+  <DonateText>Support Discover development</DonateText>
   <DonateLink>https://ko-fi.com/mauriceboe</DonateLink>
   <Requires/>
 

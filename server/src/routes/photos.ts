@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import { AuthRequest } from '../types';
-import { streamPhoto, getPhotoInfo, resolveTrekPhoto } from '../services/memories/photoResolverService';
-import { canAccessTrekPhoto } from '../services/memories/helpersService';
+import { streamPhoto, getPhotoInfo, resolveDiscoverPhoto } from '../services/memories/photoResolverService';
+import { canAccessDiscoverPhoto } from '../services/memories/helpersService';
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.get('/:id/thumbnail', authenticate, async (req: Request, res: Response) =
   const photoId = Number(req.params.id);
   if (!Number.isFinite(photoId)) return res.status(400).json({ error: 'Invalid photo ID' });
 
-  if (!canAccessTrekPhoto(authReq.user.id, photoId)) {
+  if (!canAccessDiscoverPhoto(authReq.user.id, photoId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -23,7 +23,7 @@ router.get('/:id/original', authenticate, async (req: Request, res: Response) =>
   const photoId = Number(req.params.id);
   if (!Number.isFinite(photoId)) return res.status(400).json({ error: 'Invalid photo ID' });
 
-  if (!canAccessTrekPhoto(authReq.user.id, photoId)) {
+  if (!canAccessDiscoverPhoto(authReq.user.id, photoId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
@@ -35,7 +35,7 @@ router.get('/:id/info', authenticate, async (req: Request, res: Response) => {
   const photoId = Number(req.params.id);
   if (!Number.isFinite(photoId)) return res.status(400).json({ error: 'Invalid photo ID' });
 
-  if (!canAccessTrekPhoto(authReq.user.id, photoId)) {
+  if (!canAccessDiscoverPhoto(authReq.user.id, photoId)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
 

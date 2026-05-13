@@ -17,9 +17,11 @@ client/public/icons/*.png
 *.sqlite-shm
 *.sqlite-wal
 
-# User data
+# User data (flat layout: data/ and uploads/ at repo root after flatten)
 server/data/*
 server/uploads/
+/data/
+/uploads/
 
 # Environment
 .env

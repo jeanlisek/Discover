@@ -751,14 +751,14 @@ export default function TripPlannerPage(): React.ReactElement | null {
         `}</style>
         <div style={{ marginBottom: 28 }}>
           <img
-            src={document.documentElement.classList.contains('dark') ? '/icons/trek-loading-light.gif' : '/icons/trek-loading-dark.gif'}
+            src={document.documentElement.classList.contains('dark') ? '/icons/discover-loading-light.gif' : '/icons/discover-loading-dark.gif'}
             alt="Loading"
             width={64}
             height={64}
           />
         </div>
         <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.3px', marginBottom: 6, animation: 'fadeInUp 0.5s ease-out' }}>
-          {trip?.title || 'TREK'}
+          {trip?.title || 'Discover'}
         </div>
         <div style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 500, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: 32, animation: 'fadeInUp 0.5s ease-out 0.1s both' }}>
           {t('trip.loadingPhotos')}

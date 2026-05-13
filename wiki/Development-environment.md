@@ -13,14 +13,14 @@
 
 ## 1. Fork & Clone the Repository
 
-Go to the [TREK repository](https://github.com/mauriceboe/TREK) and click **Fork** to create your own copy.
+Go to the [Discover repository](https://github.com/mauriceboe/TREK) and click **Fork** to create your own copy.
 
 Then clone your fork locally:
 
 ```bash
 # Clone your fork, checking out the dev branch
-git clone -b dev git@github.com:your-username/TREK.git
-cd TREK
+git clone -b dev git@github.com:your-username/Discover.git
+cd Discover
 ```
 
 ---
@@ -37,7 +37,7 @@ You should now have two remotes:
 
 | Remote     | URL                                          | Purpose                        |
 |------------|----------------------------------------------|--------------------------------|
-| `origin`   | `git@github.com:your-username/TREK.git`      | Your fork — push changes here  |
+| `origin`   | `git@github.com:your-username/Discover.git`      | Your fork — push changes here  |
 | `upstream` | `git@github.com:mauriceboe/TREK.git`         | Main repo — pull updates from here |
 
 ---

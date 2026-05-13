@@ -2,66 +2,66 @@ import { Response } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { db } from '../../db/database';
-import type { TrekPhoto } from '../../types';
+import type { DiscoverPhoto } from '../../types';
 import { streamImmichAsset, fetchImmichThumbnailBytes, getAssetInfo as getImmichAssetInfo } from './immichService';
 import { streamSynologyAsset, fetchSynologyThumbnailBytes, getSynologyAssetInfo } from './synologyService';
 import type { ServiceResult, AssetInfo } from './helpersService';
 import { fail, success } from './helpersService';
 import { encrypt_api_key, decrypt_api_key } from '../apiKeyCrypto';
-import * as photoCache from './trekPhotoCache';
+import * as photoCache from './discoverPhotoCache';
 import { ensureLocalThumbnail } from './thumbnailService';
 
 // ── Lookup / Register ────────────────────────────────────────────────────
 
-export function getOrCreateTrekPhoto(
+export function getOrCreateDiscoverPhoto(
   provider: string,
   assetId: string,
   ownerId: number,
   passphrase?: string,
 ): number {
   const existing = db.prepare(
-    'SELECT id FROM trek_photos WHERE provider = ? AND asset_id = ? AND owner_id = ?'
+    'SELECT id FROM discover_photos WHERE provider = ? AND asset_id = ? AND owner_id = ?'
   ).get(provider, assetId, ownerId) as { id: number } | undefined;
   if (existing) {
     if (passphrase) {
-      db.prepare('UPDATE trek_photos SET passphrase = ? WHERE id = ?')
+      db.prepare('UPDATE discover_photos SET passphrase = ? WHERE id = ?')
         .run(encrypt_api_key(passphrase), existing.id);
     }
     return existing.id;
   }
 
   const res = db.prepare(
-    'INSERT INTO trek_photos (provider, asset_id, owner_id, passphrase) VALUES (?, ?, ?, ?)'
+    'INSERT INTO discover_photos (provider, asset_id, owner_id, passphrase) VALUES (?, ?, ?, ?)'
   ).run(provider, assetId, ownerId, passphrase ? encrypt_api_key(passphrase) : null);
   return Number(res.lastInsertRowid);
 }
 
-export function getOrCreateLocalTrekPhoto(
+export function getOrCreateLocalDiscoverPhoto(
   filePath: string,
   thumbnailPath?: string | null,
   width?: number | null,
   height?: number | null,
 ): number {
   const existing = db.prepare(
-    "SELECT id FROM trek_photos WHERE provider = 'local' AND file_path = ?"
+    "SELECT id FROM discover_photos WHERE provider = 'local' AND file_path = ?"
   ).get(filePath) as { id: number } | undefined;
   if (existing) return existing.id;
 
   const res = db.prepare(
-    'INSERT INTO trek_photos (provider, file_path, thumbnail_path, width, height) VALUES (?, ?, ?, ?, ?)'
+    'INSERT INTO discover_photos (provider, file_path, thumbnail_path, width, height) VALUES (?, ?, ?, ?, ?)'
   ).run('local', filePath, thumbnailPath || null, width || null, height || null);
   return Number(res.lastInsertRowid);
 }
 
-export function resolveTrekPhoto(photoId: number): TrekPhoto | null {
-  return db.prepare('SELECT * FROM trek_photos WHERE id = ?').get(photoId) as TrekPhoto | undefined || null;
+export function resolveDiscoverPhoto(photoId: number): DiscoverPhoto | null {
+  return db.prepare('SELECT * FROM discover_photos WHERE id = ?').get(photoId) as DiscoverPhoto | undefined || null;
 }
 
 // ── Streaming ────────────────────────────────────────────────────────────
 
 async function streamCachedThumbnail(
   res: Response,
-  photo: TrekPhoto,
+  photo: DiscoverPhoto,
   fetchBytes: () => Promise<{ bytes: Buffer; contentType: string } | { error: string; status: number }>,
   fallback: () => Promise<unknown>,
 ): Promise<void> {
@@ -95,7 +95,7 @@ export async function streamPhoto(
   photoId: number,
   kind: 'thumbnail' | 'original',
 ): Promise<void> {
-  const photo = resolveTrekPhoto(photoId);
+  const photo = resolveDiscoverPhoto(photoId);
   if (!photo) {
     res.status(404).json({ error: 'Photo not found' });
     return;
@@ -111,7 +111,7 @@ export async function streamPhoto(
         if (result) {
           thumbRel = result.thumbnailRelPath;
           db.prepare(
-            'UPDATE trek_photos SET thumbnail_path = ?, width = COALESCE(width, ?), height = COALESCE(height, ?) WHERE id = ?'
+            'UPDATE discover_photos SET thumbnail_path = ?, width = COALESCE(width, ?), height = COALESCE(height, ?) WHERE id = ?'
           ).run(thumbRel, result.width, result.height, photo.id);
         }
       }
@@ -175,7 +175,7 @@ export async function getPhotoInfo(
   userId: number,
   photoId: number,
 ): Promise<ServiceResult<AssetInfo>> {
-  const photo = resolveTrekPhoto(photoId);
+  const photo = resolveDiscoverPhoto(photoId);
   if (!photo) return fail('Photo not found', 404);
 
   switch (photo.provider) {
@@ -206,20 +206,20 @@ export async function getPhotoInfo(
 
 // ── Update provider on existing trek_photo (for Immich upload sync) ─────
 
-export function setTrekPhotoProvider(
-  trekPhotoId: number,
+export function setDiscoverPhotoProvider(
+  discoverPhotoId: number,
   provider: string,
   assetId: string,
   ownerId: number,
 ): void {
   db.prepare(
-    'UPDATE trek_photos SET provider = ?, asset_id = ?, owner_id = ? WHERE id = ?'
-  ).run(provider, assetId, ownerId, trekPhotoId);
+    'UPDATE discover_photos SET provider = ?, asset_id = ?, owner_id = ? WHERE id = ?'
+  ).run(provider, assetId, ownerId, discoverPhotoId);
 }
 
 // ── Orphan cleanup ───────────────────────────────────────────────────────
 
-export function deleteTrekPhotoIfOrphan(photoId: number): void {
+export function deleteDiscoverPhotoIfOrphan(photoId: number): void {
   const stillUsed = db.prepare(`
     SELECT 1 FROM trip_photos WHERE photo_id = ?
     UNION ALL
@@ -227,13 +227,13 @@ export function deleteTrekPhotoIfOrphan(photoId: number): void {
     LIMIT 1
   `).get(photoId, photoId);
   if (stillUsed) return;
-  db.prepare("DELETE FROM trek_photos WHERE id = ? AND provider != 'local'").run(photoId);
+  db.prepare("DELETE FROM discover_photos WHERE id = ? AND provider != 'local'").run(photoId);
 }
 
 // ── Delete local file for a trek_photo ──────────────────────────────────
 
-export function getTrekPhotoFilePath(photoId: number): string | null {
-  const photo = resolveTrekPhoto(photoId);
+export function getDiscoverPhotoFilePath(photoId: number): string | null {
+  const photo = resolveDiscoverPhoto(photoId);
   if (!photo || photo.provider !== 'local' || !photo.file_path) return null;
   return path.join(__dirname, '../../../uploads', photo.file_path);
 }

@@ -1,13 +1,13 @@
 import { db } from '../db/database';
 import { broadcastToUser } from '../websocket';
 import type { Journey, JourneyEntry, JourneyPhoto, JourneyContributor } from '../types';
-import { getOrCreateTrekPhoto, getOrCreateLocalTrekPhoto, setTrekPhotoProvider, deleteTrekPhotoIfOrphan } from './memories/photoResolverService';
+import { getOrCreateDiscoverPhoto, getOrCreateLocalDiscoverPhoto, setDiscoverPhotoProvider, deleteDiscoverPhotoIfOrphan } from './memories/photoResolverService';
 
 function ts(): number {
   return Date.now();
 }
 
-// Per-entry photo view: join journey_entry_photos → journey_photos (gallery) → trek_photos.
+// Per-entry photo view: join journey_entry_photos → journey_photos (gallery) → discover_photos.
 // id = gp.id (gallery photo id) — used by clients for linkPhoto/updatePhoto/unlink/delete.
 const JP_SELECT = `
   gp.id, jep.entry_id, gp.photo_id, gp.caption, jep.sort_order, gp.shared, gp.created_at,
@@ -15,14 +15,14 @@ const JP_SELECT = `
 `;
 const JP_JOIN = `journey_entry_photos jep
   JOIN journey_photos gp ON gp.id  = jep.journey_photo_id
-  JOIN trek_photos    tp ON tp.id  = gp.photo_id`;
+  JOIN discover_photos    tp ON tp.id  = gp.photo_id`;
 
-// Per-journey gallery view: journey_photos → trek_photos (no entry context).
+// Per-journey gallery view: journey_photos → discover_photos (no entry context).
 const GALLERY_SELECT = `
   gp.id, gp.journey_id, gp.photo_id, gp.caption, gp.shared, gp.sort_order, gp.created_at,
   tp.provider, tp.asset_id, tp.owner_id, tp.file_path, tp.thumbnail_path, tp.width, tp.height
 `;
-const GALLERY_JOIN = 'journey_photos gp JOIN trek_photos tp ON tp.id = gp.photo_id';
+const GALLERY_JOIN = 'journey_photos gp JOIN discover_photos tp ON tp.id = gp.photo_id';
 
 function broadcastJourneyEvent(journeyId: number, event: string, data: Record<string, unknown>, excludeSocketId?: string | number) {
   const contributors = db.prepare(
@@ -655,14 +655,14 @@ function promoteSkeletonIfNeeded(entry: JourneyEntry): void {
 }
 
 // Ensure a trek_photo_id is in the journey gallery; return its gallery row id.
-function ensureInGallery(journeyId: number, trekPhotoId: number, caption?: string, shared?: number): number {
+function ensureInGallery(journeyId: number, discoverPhotoId: number, caption?: string, shared?: number): number {
   const now = ts();
   const maxOrderRow = db.prepare('SELECT MAX(sort_order) as m FROM journey_photos WHERE journey_id = ?').get(journeyId) as { m: number | null };
   db.prepare(`
     INSERT OR IGNORE INTO journey_photos (journey_id, photo_id, caption, shared, sort_order, created_at)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(journeyId, trekPhotoId, caption || null, shared ?? 0, (maxOrderRow?.m ?? -1) + 1, now);
-  const row = db.prepare('SELECT id FROM journey_photos WHERE journey_id = ? AND photo_id = ?').get(journeyId, trekPhotoId) as { id: number };
+  `).run(journeyId, discoverPhotoId, caption || null, shared ?? 0, (maxOrderRow?.m ?? -1) + 1, now);
+  const row = db.prepare('SELECT id FROM journey_photos WHERE journey_id = ? AND photo_id = ?').get(journeyId, discoverPhotoId) as { id: number };
   return row.id;
 }
 
@@ -683,8 +683,8 @@ export function addPhoto(entryId: number, userId: number, filePath: string, thum
   if (!entry) return null;
   if (!canEdit(entry.journey_id, userId)) return null;
 
-  const trekPhotoId = getOrCreateLocalTrekPhoto(filePath, thumbnailPath);
-  const galleryId = db.transaction(() => ensureInGallery(entry.journey_id, trekPhotoId, caption))();
+  const discoverPhotoId = getOrCreateLocalDiscoverPhoto(filePath, thumbnailPath);
+  const galleryId = db.transaction(() => ensureInGallery(entry.journey_id, discoverPhotoId, caption))();
   const result = linkGalleryPhotoToEntry(galleryId, entryId);
   promoteSkeletonIfNeeded(entry);
   return result;
@@ -695,17 +695,17 @@ export function addProviderPhoto(entryId: number, userId: number, provider: stri
   if (!entry) return null;
   if (!canEdit(entry.journey_id, userId)) return null;
 
-  const trekPhotoId = getOrCreateTrekPhoto(provider, assetId, userId, passphrase);
+  const discoverPhotoId = getOrCreateDiscoverPhoto(provider, assetId, userId, passphrase);
 
   // skip if this photo is already linked to this entry
   const alreadyLinked = db.prepare(`
     SELECT 1 FROM journey_entry_photos jep
     JOIN journey_photos gp ON gp.id = jep.journey_photo_id
     WHERE jep.entry_id = ? AND gp.photo_id = ?
-  `).get(entryId, trekPhotoId);
+  `).get(entryId, discoverPhotoId);
   if (alreadyLinked) return null;
 
-  const galleryId = db.transaction(() => ensureInGallery(entry.journey_id, trekPhotoId, caption))();
+  const galleryId = db.transaction(() => ensureInGallery(entry.journey_id, discoverPhotoId, caption))();
   const result = linkGalleryPhotoToEntry(galleryId, entryId);
   promoteSkeletonIfNeeded(entry);
   return result;
@@ -735,12 +735,12 @@ export function uploadGalleryPhotos(journeyId: number, userId: number, filePaths
   let nextOrder = (maxOrderRow?.m ?? -1) + 1;
 
   for (const f of filePaths) {
-    const trekPhotoId = getOrCreateLocalTrekPhoto(f.path, f.thumbnail);
+    const discoverPhotoId = getOrCreateLocalDiscoverPhoto(f.path, f.thumbnail);
     db.prepare(`
       INSERT OR IGNORE INTO journey_photos (journey_id, photo_id, shared, sort_order, created_at)
       VALUES (?, ?, 0, ?, ?)
-    `).run(journeyId, trekPhotoId, nextOrder++, now);
-    const row = db.prepare(`SELECT ${GALLERY_SELECT} FROM ${GALLERY_JOIN} WHERE gp.journey_id = ? AND gp.photo_id = ?`).get(journeyId, trekPhotoId);
+    `).run(journeyId, discoverPhotoId, nextOrder++, now);
+    const row = db.prepare(`SELECT ${GALLERY_SELECT} FROM ${GALLERY_JOIN} WHERE gp.journey_id = ? AND gp.photo_id = ?`).get(journeyId, discoverPhotoId);
     if (row) results.push(row);
   }
   return results;
@@ -749,8 +749,8 @@ export function uploadGalleryPhotos(journeyId: number, userId: number, filePaths
 // Add a provider photo to the gallery only (no entry link).
 export function addProviderPhotoToGallery(journeyId: number, userId: number, provider: string, assetId: string, caption?: string, passphrase?: string): any | null {
   if (!canEdit(journeyId, userId)) return null;
-  const trekPhotoId = getOrCreateTrekPhoto(provider, assetId, userId, passphrase);
-  const galleryId = db.transaction(() => ensureInGallery(journeyId, trekPhotoId, caption))();
+  const discoverPhotoId = getOrCreateDiscoverPhoto(provider, assetId, userId, passphrase);
+  const galleryId = db.transaction(() => ensureInGallery(journeyId, discoverPhotoId, caption))();
   return db.prepare(`SELECT ${GALLERY_SELECT} FROM ${GALLERY_JOIN} WHERE gp.id = ?`).get(galleryId) ?? null;
 }
 
@@ -770,20 +770,20 @@ export function deleteGalleryPhoto(journeyPhotoId: number, userId: number): { ph
   if (!row) return null;
   if (!canEdit(row.journey_id, userId)) return null;
 
-  const trekRow = db.prepare('SELECT file_path, provider FROM trek_photos WHERE id = ?').get(row.photo_id) as { file_path?: string; provider?: string } | undefined;
+  const discoverRow = db.prepare('SELECT file_path, provider FROM discover_photos WHERE id = ?').get(row.photo_id) as { file_path?: string; provider?: string } | undefined;
 
   // cascade on journey_entry_photos.journey_photo_id handles junction cleanup
   db.prepare('DELETE FROM journey_photos WHERE id = ?').run(journeyPhotoId);
-  deleteTrekPhotoIfOrphan(row.photo_id);
+  deleteDiscoverPhotoIfOrphan(row.photo_id);
 
-  return { photo_id: row.photo_id, file_path: trekRow?.file_path ?? null };
+  return { photo_id: row.photo_id, file_path: discoverRow?.file_path ?? null };
 }
 
 export function setPhotoProvider(photoId: number, provider: string, assetId: string, ownerId: number) {
   // photoId = journey_photos.id (gallery row); look up the trek_photo_id
   const jp = db.prepare('SELECT photo_id FROM journey_photos WHERE id = ?').get(photoId) as { photo_id: number } | undefined;
   if (!jp) return;
-  setTrekPhotoProvider(jp.photo_id, provider, assetId, ownerId);
+  setDiscoverPhotoProvider(jp.photo_id, provider, assetId, ownerId);
   // also denorm on gallery row for fast reads
   db.prepare('UPDATE journey_photos SET provider = ?, asset_id = ?, owner_id = ? WHERE id = ?').run(provider, assetId, ownerId, photoId);
 }
@@ -812,12 +812,12 @@ export function deletePhoto(photoId: number, userId: number): { id: number; phot
   if (!row) return null;
   if (!canEdit(row.journey_id, userId)) return null;
 
-  const trekRow = db.prepare('SELECT file_path, provider FROM trek_photos WHERE id = ?').get(row.photo_id) as { file_path?: string; provider?: string } | undefined;
+  const discoverRow = db.prepare('SELECT file_path, provider FROM discover_photos WHERE id = ?').get(row.photo_id) as { file_path?: string; provider?: string } | undefined;
 
   db.prepare('DELETE FROM journey_photos WHERE id = ?').run(photoId);
-  deleteTrekPhotoIfOrphan(row.photo_id);
+  deleteDiscoverPhotoIfOrphan(row.photo_id);
 
-  return { id: row.id, photo_id: row.photo_id, file_path: trekRow?.file_path ?? null, journey_id: row.journey_id };
+  return { id: row.id, photo_id: row.photo_id, file_path: discoverRow?.file_path ?? null, journey_id: row.journey_id };
 }
 
 // ── Contributors ─────────────────────────────────────────────────────────

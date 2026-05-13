@@ -1,4 +1,4 @@
-# Contributing to TREK
+# Contributing to Discover
 
 Thanks for your interest in contributing! Please read these guidelines before opening a pull request.
 

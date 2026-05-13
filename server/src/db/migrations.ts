@@ -1515,11 +1515,11 @@ function runMigrations(db: Database.Database): void {
       try { db.exec("ALTER TABLE vacay_plans ADD COLUMN week_start INTEGER NOT NULL DEFAULT 1"); } catch {}
     },
     // Migration: Unified Photo Provider Abstraction Layer (#584)
-    // Central trek_photos registry; trip_photos + journey_photos reference via photo_id
+    // Central discover_photos registry; trip_photos + journey_photos reference via photo_id
     () => {
       // 1. Create the central photo registry
       db.exec(`
-        CREATE TABLE IF NOT EXISTS trek_photos (
+        CREATE TABLE IF NOT EXISTS discover_photos (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           provider TEXT NOT NULL,
           asset_id TEXT,
@@ -1531,10 +1531,10 @@ function runMigrations(db: Database.Database): void {
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_trek_photos_provider_asset ON trek_photos(provider, asset_id, owner_id) WHERE asset_id IS NOT NULL');
-      db.exec('CREATE INDEX IF NOT EXISTS idx_trek_photos_owner ON trek_photos(owner_id)');
+      db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_discover_photos_provider_asset ON discover_photos(provider, asset_id, owner_id) WHERE asset_id IS NOT NULL');
+      db.exec('CREATE INDEX IF NOT EXISTS idx_discover_photos_owner ON discover_photos(owner_id)');
 
-      // 2. Migrate trip_photos → trek_photos + photo_id FK
+      // 2. Migrate trip_photos → discover_photos + photo_id FK
       const tripPhotosExists = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'trip_photos'").get();
       if (tripPhotosExists) {
         // Detect schema variant: old (immich_asset_id) vs new (asset_id + provider)
@@ -1546,15 +1546,15 @@ function runMigrations(db: Database.Database): void {
 
         if (assetCol) {
           const providerExpr = hasProvider ? 'provider' : "'immich'";
-          // Qualified alias needed in JOIN context where both trip_photos and trek_photos have provider
+          // Qualified alias needed in JOIN context where both trip_photos and discover_photos have provider
           const providerJoinExpr = hasProvider ? 'tp.provider' : "'immich'";
           const sharedExpr = tpColNames.has('shared') ? 'shared' : '1';
           const addedAtExpr = tpColNames.has('added_at') ? 'COALESCE(added_at, CURRENT_TIMESTAMP)' : 'CURRENT_TIMESTAMP';
           const albumLinkExpr = hasAlbumLink ? 'album_link_id' : 'NULL';
 
-          // Insert existing trip photo references into trek_photos
+          // Insert existing trip photo references into discover_photos
           db.exec(`
-            INSERT OR IGNORE INTO trek_photos (provider, asset_id, owner_id, created_at)
+            INSERT OR IGNORE INTO discover_photos (provider, asset_id, owner_id, created_at)
             SELECT DISTINCT ${providerExpr}, ${assetCol}, user_id, ${addedAtExpr}
             FROM trip_photos
             WHERE ${assetCol} IS NOT NULL AND TRIM(${assetCol}) != ''
@@ -1566,7 +1566,7 @@ function runMigrations(db: Database.Database): void {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               trip_id INTEGER NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
               user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-              photo_id INTEGER NOT NULL REFERENCES trek_photos(id) ON DELETE CASCADE,
+              photo_id INTEGER NOT NULL REFERENCES discover_photos(id) ON DELETE CASCADE,
               shared INTEGER NOT NULL DEFAULT 1,
               album_link_id INTEGER REFERENCES trip_album_links(id) ON DELETE SET NULL,
               added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -1577,7 +1577,7 @@ function runMigrations(db: Database.Database): void {
             INSERT OR IGNORE INTO trip_photos_new (trip_id, user_id, photo_id, shared, album_link_id, added_at)
             SELECT tp.trip_id, tp.user_id, tkp.id, ${sharedExpr}, ${albumLinkExpr}, ${addedAtExpr}
             FROM trip_photos tp
-            JOIN trek_photos tkp ON tkp.provider = ${providerJoinExpr} AND tkp.asset_id = tp.${assetCol} AND tkp.owner_id = tp.user_id
+            JOIN discover_photos tkp ON tkp.provider = ${providerJoinExpr} AND tkp.asset_id = tp.${assetCol} AND tkp.owner_id = tp.user_id
           `);
         } else {
           // No asset column at all — just recreate empty
@@ -1586,7 +1586,7 @@ function runMigrations(db: Database.Database): void {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               trip_id INTEGER NOT NULL REFERENCES trips(id) ON DELETE CASCADE,
               user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-              photo_id INTEGER NOT NULL REFERENCES trek_photos(id) ON DELETE CASCADE,
+              photo_id INTEGER NOT NULL REFERENCES discover_photos(id) ON DELETE CASCADE,
               shared INTEGER NOT NULL DEFAULT 1,
               album_link_id INTEGER REFERENCES trip_album_links(id) ON DELETE SET NULL,
               added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -1600,19 +1600,19 @@ function runMigrations(db: Database.Database): void {
         db.exec('CREATE INDEX IF NOT EXISTS idx_trip_photos_photo ON trip_photos(photo_id)');
       }
 
-      // 3. Migrate journey_photos → trek_photos + photo_id FK
+      // 3. Migrate journey_photos → discover_photos + photo_id FK
       const journeyPhotosExists = db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'journey_photos'").get();
       if (journeyPhotosExists) {
-        // Insert provider-based journey photos into trek_photos
+        // Insert provider-based journey photos into discover_photos
         db.exec(`
-          INSERT OR IGNORE INTO trek_photos (provider, asset_id, owner_id, width, height, created_at)
+          INSERT OR IGNORE INTO discover_photos (provider, asset_id, owner_id, width, height, created_at)
           SELECT DISTINCT provider, asset_id, owner_id, width, height, created_at
           FROM journey_photos
           WHERE provider != 'local' AND asset_id IS NOT NULL AND TRIM(asset_id) != ''
         `);
-        // Insert local journey photos into trek_photos (each is unique)
+        // Insert local journey photos into discover_photos (each is unique)
         db.exec(`
-          INSERT INTO trek_photos (provider, file_path, thumbnail_path, width, height, created_at)
+          INSERT INTO discover_photos (provider, file_path, thumbnail_path, width, height, created_at)
           SELECT 'local', file_path, thumbnail_path, width, height, created_at
           FROM journey_photos
           WHERE provider = 'local' AND file_path IS NOT NULL
@@ -1623,7 +1623,7 @@ function runMigrations(db: Database.Database): void {
           CREATE TABLE journey_photos_new (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             entry_id INTEGER NOT NULL,
-            photo_id INTEGER NOT NULL REFERENCES trek_photos(id) ON DELETE CASCADE,
+            photo_id INTEGER NOT NULL REFERENCES discover_photos(id) ON DELETE CASCADE,
             caption TEXT,
             sort_order INTEGER DEFAULT 0,
             shared INTEGER NOT NULL DEFAULT 1,
@@ -1636,7 +1636,7 @@ function runMigrations(db: Database.Database): void {
           INSERT INTO journey_photos_new (entry_id, photo_id, caption, sort_order, shared, created_at)
           SELECT jp.entry_id, tkp.id, jp.caption, jp.sort_order, jp.shared, jp.created_at
           FROM journey_photos jp
-          JOIN trek_photos tkp ON tkp.provider = jp.provider AND tkp.asset_id = jp.asset_id AND tkp.owner_id = jp.owner_id
+          JOIN discover_photos tkp ON tkp.provider = jp.provider AND tkp.asset_id = jp.asset_id AND tkp.owner_id = jp.owner_id
           WHERE jp.provider != 'local' AND jp.asset_id IS NOT NULL
         `);
         // Migrate local photos (match by file_path)
@@ -1644,7 +1644,7 @@ function runMigrations(db: Database.Database): void {
           INSERT INTO journey_photos_new (entry_id, photo_id, caption, sort_order, shared, created_at)
           SELECT jp.entry_id, tkp.id, jp.caption, jp.sort_order, jp.shared, jp.created_at
           FROM journey_photos jp
-          JOIN trek_photos tkp ON tkp.provider = 'local' AND tkp.file_path = jp.file_path
+          JOIN discover_photos tkp ON tkp.provider = 'local' AND tkp.file_path = jp.file_path
           WHERE jp.provider = 'local' AND jp.file_path IS NOT NULL
         `);
         db.exec('DROP TABLE journey_photos');
@@ -1700,7 +1700,7 @@ function runMigrations(db: Database.Database): void {
     // Migration 104: Passphrase support for Synology shared-album links (#689)
     () => {
       try { db.exec('ALTER TABLE trip_album_links ADD COLUMN passphrase TEXT DEFAULT NULL'); } catch (err: any) { if (!err.message?.includes('duplicate column name')) throw err; }
-      try { db.exec('ALTER TABLE trek_photos ADD COLUMN passphrase TEXT DEFAULT NULL'); } catch (err: any) { if (!err.message?.includes('duplicate column name')) throw err; }
+      try { db.exec('ALTER TABLE discover_photos ADD COLUMN passphrase TEXT DEFAULT NULL'); } catch (err: any) { if (!err.message?.includes('duplicate column name')) throw err; }
     },
     // Migration 105: Persistent Google place photo disk cache registry
     () => {
@@ -1743,12 +1743,12 @@ function runMigrations(db: Database.Database): void {
     }},
     // Migration 108: Disk cache metadata for remote-provider photo thumbnails (Immich / Synology)
     () => db.exec(`
-      CREATE TABLE IF NOT EXISTS trek_photo_cache_meta (
+      CREATE TABLE IF NOT EXISTS discover_photo_cache_meta (
         cache_key  TEXT    PRIMARY KEY,
         content_type TEXT  NOT NULL DEFAULT 'image/jpeg',
         fetched_at INTEGER NOT NULL
       );
-      CREATE INDEX IF NOT EXISTS idx_trek_photo_cache_meta_fetched_at ON trek_photo_cache_meta (fetched_at);
+      CREATE INDEX IF NOT EXISTS idx_discover_photo_cache_meta_fetched_at ON discover_photo_cache_meta (fetched_at);
     `),
     // Migration 109: Reservation endpoints (from/to points for flights, trains, ferries, car rentals) — #384 + #587
     () => {
@@ -2036,7 +2036,7 @@ function runMigrations(db: Database.Database): void {
         CREATE TABLE IF NOT EXISTS journey_photos (
           id          INTEGER PRIMARY KEY AUTOINCREMENT,
           journey_id  INTEGER NOT NULL REFERENCES journeys(id)    ON DELETE CASCADE,
-          photo_id    INTEGER NOT NULL REFERENCES trek_photos(id) ON DELETE CASCADE,
+          photo_id    INTEGER NOT NULL REFERENCES discover_photos(id) ON DELETE CASCADE,
           caption     TEXT,
           shared      INTEGER DEFAULT 0,
           sort_order  INTEGER DEFAULT 0,
